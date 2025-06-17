@@ -26,7 +26,7 @@ scipy = "^1.15.3"
 sqlalchemy = "^2.0.41"
 boto3 = "^1.38.23"
 botocore = "^1.38.23"
-pip-system-certs = "^4.0"
+pip-system-certs = "^5.1"
 psycopg2-binary = "^2.9.10"
 prometheus-flask-exporter = "^0.23.2"
 
