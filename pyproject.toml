@@ -17,7 +17,7 @@ repository = "https://github.com/Plant-Food-Research-Open/r-pipeline-development
 python = ">=3.10,<=3.12"
 mlflow = "<=2.16.0"
 numpy = "^2.2.6"
-pandas = "^2.2.3"
+pandas = "^2.3.1"
 scikit-learn = "^1.6.1"
 pyyaml = "^6.0.2"
 alembic = "^1.16.1"
