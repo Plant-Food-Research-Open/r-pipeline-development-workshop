@@ -44,6 +44,24 @@ list(
     conformalised_stack, tidymodels_deployment$conformalise_model(auto_fit, data_train)
   ),
   tar_target(
+    dalex_explainer,
+    {
+      box::use(DALEX[explain])
+      box::use(h2o[h2o.predict, as.h2o])
+      # Define custom predict function
+      predict_function <- function(model, data) {
+        as.vector(h2o.predict(model, as.h2o(data)))
+      }
+      explain(
+        model = auto_fit$fit$fit,
+        data = data_train |> dplyr::select(-mpg),
+        y = data_train$mpg,
+        predict_function = predict_function,
+        label = "H2O AutoML"
+      )
+    }
+  ),
+  tar_target(
     board, board_s3(
       "data", 
       access_key = "user", 

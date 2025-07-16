@@ -194,6 +194,101 @@ pr(here("book", "h2o_deployment/app/plumber.R")) |>
   pr_run(port = 8088)
 ```
 
+# H2O with DALEX
+
+This section demonstrates how to fit an H2O model on `mtcars`, and then explain the model using DALEX. We use `mpg` as the target and all other variables as predictors. This framework works with ML models, including H2O, random forests, xgboost, or even linear models.
+
+```{r setup-dalex, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+box::use(
+  h2o[h2o.init, h2o.gbm, h2o.predict, as.h2o],
+  DALEX[explain, model_parts, model_profile],
+  dplyr[mutate],
+  ggplot2[ggplot],
+  plotly[ggplotly]
+)
+
+h2o.init()
+
+```
+
+## Data for DALEX demo
+
+Prepare the `mtcars` dataset for modeling and explanation, and convert the data to H2O dataframe.
+
+```{r data_for_DALEX, include  = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output = TRUE, eval = TRUE}
+y <- "mpg"
+x <- setdiff(names(mtcars), y)
+
+mtcars_h2o <- as.h2o(mtcars)
+```
+
+## H2O GBM model
+
+Now train a simple H2O GBM regression model on `mtcars`.
+
+```{r H2O_GBM_Model, include  = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output = TRUE, eval = TRUE}
+model_h2o <- h2o.gbm(
+  y = y,
+  x = x,
+  training_frame = mtcars_h2o,
+  seed = 123
+)
+```
+
+## DALEX explainer
+
+We next create a DALEX explainer for the GBM H2O model.
+In DALEX, an explainer object provides a unified interface to understand and interpret any machine learning model and acts as a wrapper around the trained model, containing:
+
+- The model object itself
+
+- data used to explain the model
+
+- true target values
+
+- a optional custom predict function 
+
+Once created, this explainer enables computation of :
+
+- variable importance (feature impact)
+
+- partial dependence profiles (effect of variables)
+
+- residual diagnostics
+
+- local explanations (e.g., individual predictions)
+
+```{r DALEX_explainer, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output = TRUE, eval = TRUE}
+predict_function <- function(model, data) {
+  as.vector(h2o.predict(model, as.h2o(data)))
+}
+
+explainer <- explain(
+  model = model_h2o,
+  data = mtcars[, x],
+  y = mtcars$mpg,
+  predict_function = predict_function,
+  label = "H2O GBM"
+)
+```
+
+## Variable importance
+
+```{r variable_importance, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output = TRUE, eval = TRUE}
+
+vi <- model_parts(explainer)
+plot(vi)
+```
+
+## Partial dependence profile
+
+```{r partial_dep_profile, fig-cap: Partial dependence profile of horsepower.}
+pdp_hp <- model_profile(explainer, variables = "hp")
+
+p <- plot(pdp_hp)
+ggplotly(p)
+```
+
 # Run with targets
 
 We can run the above as a targets pipeline.
