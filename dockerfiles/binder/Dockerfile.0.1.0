@@ -21,7 +21,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     RENV_PATHS_LIBRARY=${HOME}/renv/library \
     RENV_PATHS_CACHE=${HOME}/renv/.cache \
     RENV_CONFIG_REPOS_OVERRIDE=https://cloud.r-project.org \
-    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/bin/java
+    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/bin/java \
+    HOME=/home/rstudio
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openjdk-17-jdk pandoc libsodium-dev graphviz \
