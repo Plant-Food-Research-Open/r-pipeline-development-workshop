@@ -10,16 +10,16 @@ LABEL org.label-schema.build-date=$BUILD_DATE
 
 LABEL version=$APP_VERSION
 
-WORKDIR /app
+WORKDIR ${HOME}
 
 USER root
 
 COPY README.md README.md
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    RENV_PATHS_ROOT=/app/renv \
-    RENV_PATHS_LIBRARY=/app/renv/library \
-    RENV_PATHS_CACHE=/app/renv/.cache \
+    RENV_PATHS_ROOT=${HOME}/renv \
+    RENV_PATHS_LIBRARY=${HOME}/renv/library \
+    RENV_PATHS_CACHE=${HOME}/renv/.cache \
     RENV_CONFIG_REPOS_OVERRIDE=https://cloud.r-project.org \
     JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/bin/java
 
@@ -40,7 +40,7 @@ FROM base AS r_builder
 
 COPY renv.lock .renvignore .Rprofile ./
 
-COPY renv /app/renv
+COPY renv ${HOME}/renv
 
 RUN mkdir -p $RENV_PATHS_LIBRARY \
     && mkdir -p $RENV_PATHS_CACHE \
@@ -64,21 +64,21 @@ RUN curl -sSL https://install.python-poetry.org | python3 -\
 
 FROM base AS runtime
 
-ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
-    R_LIBS_SITE=/app/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu \
-    VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+ENV R_LIBS=${HOME}/renv/library/R-4.4/x86_64-pc-linux-gnu \
+    R_LIBS_SITE=${HOME}/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu \
+    VIRTUAL_ENV=${HOME}/.venv \
+    PATH="${HOME}/.venv/bin:$PATH"
 
 COPY --chown=${NB_USER}:${NB_USER} ./app .
 
-COPY --from=r_builder --chown=${NB_USER}:${NB_USER} /app .
+COPY --from=r_builder --chown=${NB_USER}:${NB_USER} ${HOME} .
 
 COPY --from=python_builder --chown=${NB_USER}:${NB_USER} /opt/venv ${VIRTUAL_ENV} 
 
-RUN chown -R ${NB_USER}:${NB_USER} /app \
-    && chmod -R 755 /app \
+RUN chown -R ${NB_USER}:${NB_USER} ${HOME} \
+    && chmod -R 755 ${HOME} \
     && R -e "cmdstanr::install_cmdstan()" \
-    && echo '.libPaths(c("/app/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu", .libPaths()))' \
+    && echo '.libPaths(c("/home/rstudio/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu", .libPaths()))' \
     >> /usr/local/lib/R/etc/Rprofile.site
 
 USER ${NB_USER}
