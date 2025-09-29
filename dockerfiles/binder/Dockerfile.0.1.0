@@ -66,14 +66,14 @@ FROM base AS runtime
 
 ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
     R_LIBS_SITE=/app/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu \
-    VIRTUAL_ENV=/opt/venv \
+    VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
 COPY --chown=${NB_USER}:${NB_USER} ./app .
 
 COPY --from=r_builder --chown=${NB_USER}:${NB_USER} /app .
 
-COPY --from=python_builder --chown=${NB_USER}:${NB_USER} ${VIRTUAL_ENV} /app/.venv
+COPY --from=python_builder --chown=${NB_USER}:${NB_USER} /opt/venv ${VIRTUAL_ENV} 
 
 RUN chown -R ${NB_USER}:${NB_USER} /app \
     && chmod -R 755 /app \
