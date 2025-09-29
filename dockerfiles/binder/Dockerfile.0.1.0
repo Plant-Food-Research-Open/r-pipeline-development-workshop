@@ -4,19 +4,21 @@ ARG BUILD_DATE
 
 ARG APP_VERSION
 
+ARG HOME=/home/rstudio
+
 LABEL maintainer=james.bristow@plantandfood.co.nz
 
 LABEL org.label-schema.build-date=$BUILD_DATE
 
 LABEL version=$APP_VERSION
 
+ENV HOME=$HOME
+
 WORKDIR ${HOME}
 
 USER root
 
 COPY README.md README.md
-
-ENV HOME=/home/rstudio
 
 ENV DEBIAN_FRONTEND=noninteractive \
     RENV_PATHS_ROOT=${HOME}/renv \
