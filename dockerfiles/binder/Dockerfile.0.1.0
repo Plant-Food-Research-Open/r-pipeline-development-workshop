@@ -1,4 +1,4 @@
-FROM rocker/rstudio:4.4.1 AS base
+FROM rocker/binder:4.4.1 AS base
 
 ARG BUILD_DATE
 
@@ -11,6 +11,8 @@ LABEL org.label-schema.build-date=$BUILD_DATE
 LABEL version=$APP_VERSION
 
 WORKDIR /app
+
+USER root
 
 COPY README.md README.md
 
@@ -56,7 +58,7 @@ ENV POETRY_NO_INTERACTION=1 \
 COPY pyproject.toml poetry.lock ./
 
 RUN curl -sSL https://install.python-poetry.org | python3 -\
-    && poetry install --no-root \
+    && poetry install --no-root --with dev \
     && rm -rf $POETRY_CACHE_DIR \
     && curl -sSL https://install.python-poetry.org | python3 - --uninstall
 
@@ -67,16 +69,18 @@ ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
     VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
-COPY --chown=rstudio:rstudio ./app .
+COPY --chown=${NB_USER}:${NB_USER} ./app .
 
-COPY --from=r_builder --chown=rstudio:rstudio /app .
+COPY --from=r_builder --chown=${NB_USER}:${NB_USER} /app .
 
-COPY --from=python_builder --chown=rstudio:rstudio ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=python_builder --chown=${NB_USER}:${NB_USER} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-RUN chown -R rstudio:rstudio /app \
+RUN chown -R ${NB_USER}:${NB_USER} /app \
     && chmod -R 755 /app \
     && R -e "cmdstanr::install_cmdstan()" \
     && echo '.libPaths(c("/app/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu", .libPaths()))' \
     >> /usr/local/lib/R/etc/Rprofile.site
+
+USER ${NB_USER}
 
 EXPOSE 8787 8787

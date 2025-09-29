@@ -1,0 +1,1 @@
+FROM ghcr.io/plant-food-research-open/binder-rpipelines:0.1.0

@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-
   postgres:
     image: postgres:15.3-bullseye
     restart: always
@@ -66,7 +65,7 @@ services:
       - 8088:8088
     volumes:
       - superset-data:/app/superset_home
-      
+
   shiny:
     image: ghcr.io/plant-food-research-open/shiny-rpipelines:${APP_VERSION:-latest}
     build:
@@ -96,6 +95,24 @@ services:
     stop_grace_period: 10s
     ports:
       - 8787:8787
+    environment:
+      USER: user
+      PASSWORD: password
+      ROOT: "TRUE"
+      DISABLE_AUTH: "TRUE"
+    command: >
+      rserver --server-user rstudio --www-port 8787 --server-daemonize=0
+
+  binder:
+    image: ghcr.io/plant-food-research-open/binder-rpipelines:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: ./dockerfiles/binder/Dockerfile.${APP_VERSION}
+      args:
+        BUILD_DATE: date -u +'%Y-%m-%dT%H:%M:%SZ'
+        APP_VERSION: ${APP_VERSION:-latest}
+      tags:
+        - ghcr.io/plant-food-research-open/binder-rpipelines:latest
 
   mlflow:
     image: ghcr.io/plant-food-research-open/mlflow-rpipelines:${APP_VERSION:-latest}

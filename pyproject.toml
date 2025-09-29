@@ -30,6 +30,14 @@ pip-system-certs = "^4.0"
 psycopg2-binary = "^2.9.10"
 prometheus-flask-exporter = "^0.23.2"
 
+[tool.poetry.group.dev.dependencies]
+jupyterhub = "^5.3.0"
+notebook = "^7.4.7"
+jupyterlab = "^4.4.9"
+ipython = "<9.6.0"
+jupyter-core = "^5.8.1"
+ipywidgets = "^8.1.7"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
