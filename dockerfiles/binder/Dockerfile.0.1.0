@@ -83,7 +83,11 @@ RUN chown -R ${NB_USER}:${NB_USER} ${HOME} \
     && chmod -R 755 ${HOME} \
     && R -e "cmdstanr::install_cmdstan()" \
     && echo '.libPaths(c("/home/rstudio/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu", .libPaths()))' \
-    >> /usr/local/lib/R/etc/Rprofile.site
+    >> /usr/local/lib/R/etc/Rprofile.site \
+    && echo 'Sys.setenv(MAKEFLAGS = "-j1", CXXFLAGS = "-O1 -g0 -fno-inline -pipe")' \
+    >> /usr/local/lib/R/etc/Rprofile.site \
+    && echo 'CXXFLAGS=-O1 -g0 -fno-inline -pipe' >> /usr/local/lib/R/etc/Makeconf \
+    && echo 'MAKEFLAGS=-j1' >> /usr/local/lib/R/etc/Makeconf
 
 USER ${NB_USER}
 
