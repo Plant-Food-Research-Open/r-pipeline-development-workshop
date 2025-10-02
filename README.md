@@ -18,6 +18,7 @@ Website: [R Pipeline Development Workshop](https://plant-food-research-open.gith
   - [Coordinators](#coordinators)
 - [Stan](#stan)
   - [Coordinators](#coordinators-1)
+- [Workshop](#workshop)
 - [Communication](#communication)
 - [Announcements](#announcements)
 - [Contributions and Support](#contributions-and-support)
