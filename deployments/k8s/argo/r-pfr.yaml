@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: r-pipelines
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Force=true,Replace=true
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sandbox
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2
+    syncOptions:
+      - Retry=true
+      - ApplyOutOfSyncOnly=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+  source:
+    repoURL: https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop.git
+    path: deployment/k8s/pfr
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sandbox

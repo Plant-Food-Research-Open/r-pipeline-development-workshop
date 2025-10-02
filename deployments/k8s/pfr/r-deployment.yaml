@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: r-pipelines
+  namespace: sandbox
+  labels:
+    app: r-pipelines
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: r-pipelines
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: r-pipelines
+    spec:
+      containers:
+        - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
+          imagePullPolicy: Always
+          name: shiny
+          ports:
+            - containerPort: 3838
+              protocol: TCP
+          args:
+            - R
+            - -e
+            - shiny::runApp('/app', launch.browser = FALSE, host = '0.0.0.0', port = 3838)
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: user
+            - name: AWS_SECRET_ACCESS_KEY
+              value: password
+        - image: h2oai/h2o-open-source-k8s:3.44.0.3
+          resources:
+            requests:
+              memory: "4Gi"
+          ports:
+            - containerPort: 54321
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /kubernetes/isLeaderNode
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 1
+          imagePullPolicy: Always
+          name: h2o
+          env:
+            - name: H2O_KUBERNETES_SERVICE_DNS
+              value: r-pipelines.sandbox.svc.cluster.local
+            - name: H2O_NODE_LOOKUP_TIMEOUT
+              value: "180"
+            - name: H2O_NODE_EXPECTED_COUNT
+              value: "1"
+            - name: H2O_KUBERNETES_API_PORT
+              value: "8081"
+        - image: postgres:15.3-bullseye
+          imagePullPolicy: Always
+          name: postgres
+          env:
+            - name: POSTGRES_USER
+              value: user
+            - name: POSTGRES_PASSWORD
+              value: password
+            - name: POSTGRES_DB
+              value: rpipelines
+        - image: ghcr.io/plant-food-research-open/superset-dev:0.1.0
+          imagePullPolicy: Always
+          name: superset
+          env:
+            - name: SUPERSET_PORT
+              value: "8088"
+            - name: ADMIN_USERNAME
+              value: user
+            - name: ADMIN_PASSWORD
+              value: password
+            - name: ADMIN_EMAIL
+              value: james.bristow@plantandfood.co.nz
+        - image: minio/minio:RELEASE.2023-05-27T05-56-19Z
+          imagePullPolicy: Always
+          name: minio
+          workingDir: /data
+          args:
+            - server
+            - --console-address
+            - :9001
+            - --address
+            - :9000
+            - /data
+          env:
+            - name: MINIO_ACCESS_KEY
+              value: user
+            - name: MINIO_SECRET_KEY
+              value: password
+            - name: MINIO_ROOT_USER
+              value: user
+            - name: MINIO_ROOT_PASSWORD
+              value: password
+            - name: MINIO_STORAGE_USE_HTTPS
+              value: "False"
+            - name: MINIO_PROMETHEUS_AUTH_TYPE
+              value: public
+      restartPolicy: Always
