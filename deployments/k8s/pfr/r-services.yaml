@@ -6,6 +6,10 @@ metadata:
   labels:
     app: r-pipelines
 spec:
+  template:
+    metadata:
+      labels:
+        app: r-pipelines
   selector:
     app: r-pipelines
   type: LoadBalancer

@@ -11,6 +11,10 @@ metadata:
     nginx.ingress.kubernetes.io/keep-alive-timeout: "500"
     nginx.ingress.kubernetes.io/proxy-body-size: 200M
 spec:
+  template:
+    metadata:
+      labels:
+        app: r-pipelines
   ingressClassName: nginx
   rules:
     - host: random-forest.model.r-pipelines.k8s.dev.pfr.co.nz
