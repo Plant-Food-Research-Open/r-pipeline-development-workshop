@@ -1,24 +1,13 @@
 [
   {
-    "objectID": "pages/tidymodels_workshop/3_ml_workflow_h2o.html",
-    "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html",
-    "title": "Machine Learning Workflow using H2O",
+    "objectID": "pages/tidymodels_workshop/4_mlops_vetiver.html",
+    "href": "pages/tidymodels_workshop/4_mlops_vetiver.html",
+    "title": "MLOps using vetiver",
     "section": "",
-    "text": "In this section, we will demonstrate how one may train a machine learning model and tune its hyper-parameters using the tidymodels framework. For more information, click this link.\nWe will combine tidymodels with H2O. H2O is an open-source, distributed machine learning platform designed for scalable and fast data analysis. It’s widely used for building predictive models on large datasets and supports both traditional machine learning algorithms and modern AI methods.\nWe first load all required dependencies.\n\nbox::use(../../R/proj_utils)\nbox::use(../../R/tidymodels_deployment)\n\nbox::use(\n  dials[svm_margin, trees, penalty, mixture],\n  readr[read_csv, read_file],\n  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],\n  here[here],\n  dplyr[mutate, bind_rows, arrange, filter, select, pull], \n  purrr[pluck],\n  ranger[ranger],\n  kernlab,\n  rsample[initial_split, vfold_cv, training, testing],\n  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg, auto_ml],\n  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],\n  yardstick[rmse, mae, metric_set, metrics],\n  hardhat[tune],\n  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon, geom_boxplot, scale_x_sqrt],\n  workflows[workflow, add_recipe, add_model, fit],\n  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],\n  stacks[stacks, add_candidates, blend_predictions, fit_members],\n  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],\n  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],\n  paws.common,\n  paws.storage,\n  plotly[ggplotly],\n  probably[int_conformal_split, cal_plot_regression],\n  plumber[pr, pr_run],\n  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],\n  DALEXtra[explain_tidymodels],\n  glmnet,\n  zeallot[...],\n  targets[tar_make],\n  h2o[h2o.connect, h2o.init],\n  agua[extract_fit_parsnip, rank_results, member_weights],\n  tidyr[unnest]\n)\n\nRegistered S3 method overwritten by 'butcher':\n  method                 from    \n  as.character.dev_topic generics\n\nsource(here(\"R/probably_vetiver.R\"))",
+    "text": "Introduction\nIn this section, we will demonstrate how one may combine vetiver and plumber with Docker and Kubernetes. As a reminder:\n\nvetiver: For model versioning, sharing, and deployment\nplumber: For creating light-weight web applications, and deploying models as microservices\n\nWe will elucidate upon Docker and Kubernetes in subsequent sections.\nWe first load all required dependencies.\n\nSys.setenv(\"S3_ENDPOINT_URL\" = \"http://127.0.0.1:9000\")\n\nbox::use(../../R/proj_utils)\nbox::use(../../R/tidymodels_deployment)\n\nbox::use(\n  dials[svm_margin, trees, penalty, mixture],\n  readr[read_csv, read_file],\n  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],\n  here[here],\n  dplyr[mutate, bind_rows, arrange, select, pull],\n  purrr[pluck],\n  ranger[ranger],\n  kernlab,\n  rsample[initial_split, vfold_cv, training, testing],\n  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],\n  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],\n  yardstick[rmse, mae, metric_set, metrics],\n  hardhat[tune],\n  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],\n  workflows[workflow, add_recipe, add_model, fit],\n  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],\n  stacks[stacks, add_candidates, blend_predictions, fit_members],\n  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],\n  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],\n  paws.common,\n  paws.storage,\n  plotly[ggplotly],\n  probably[int_conformal_split, cal_plot_regression],\n  plumber[pr, pr_run],\n  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],\n  DALEXtra[explain_tidymodels],\n  glmnet,\n  zeallot[...],\n  targets[tar_make]\n)\n\nRegistered S3 method overwritten by 'butcher':\n  method                 from    \n  as.character.dev_topic generics\n\nsource(here(\"R/probably_vetiver.R\"))\n\n\n\nData\nWe will next load an example dataset. For this tutorial, we will use the mtcars dataset.\n\ndata(\"mtcars\")\nhead(mtcars)\n\n                   mpg cyl disp  hp drat    wt  qsec vs am gear carb\nMazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4\nMazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4\nDatsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1\nHornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1\nHornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2\nValiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1\n\n\nWe will next perform a 80-20 train-test data split.\n\ndata_split &lt;- mtcars |&gt;\n  initial_split(\n    prop = 0.8\n  )\n\ndata_train &lt;- training(data_split)\ndata_test  &lt;- testing(data_split)\n\nhead(data_train)\n\n               mpg cyl  disp  hp drat    wt  qsec vs am gear carb\nPorsche 914-2 26.0   4 120.3  91 4.43 2.140 16.70  0  1    5    2\nHonda Civic   30.4   4  75.7  52 4.93 1.615 18.52  1  1    4    2\nMerc 450SE    16.4   8 275.8 180 3.07 4.070 17.40  0  0    3    3\nCamaro Z28    13.3   8 350.0 245 3.73 3.840 15.41  0  0    3    4\nMerc 230      22.8   4 140.8  95 3.92 3.150 22.90  1  0    4    2\nMerc 280      19.2   6 167.6 123 3.92 3.440 18.30  1  0    4    4\n\n\nNext, we will create a data preprocessing recipe using the recipes package, which will:\n\nDrop zero and near zero-variance columns.\nNormalise all numeric columns using Z-standardisation.\nImpute missing data using k nearest neighbor imputation.\n\n\ntraining_recipe &lt;- recipe(data_train) |&gt;\n  update_role(everything(), new_role = \"predictor\") |&gt;\n  update_role(mpg, new_role = \"outcome\") |&gt;\n  step_zv() |&gt;\n  step_nzv() |&gt;\n  step_normalize(all_numeric(), -all_outcomes()) |&gt;\n  step_impute_knn()\n\n\n\nTraining\nWe will train a simple random forest model with default settings using tidymodels:\n\nrf_recipe &lt;- rand_forest() |&gt; \n  set_engine(\"ranger\") |&gt; \n  set_mode(\"regression\") \n\nrf_workflow &lt;- workflow() |&gt; \n  add_recipe(training_recipe) |&gt; \n  add_model(rf_recipe)\n\nfit_rf &lt;- fit(rf_workflow, data = data_train) \n\n\n\nUncertainty Quantification\nMost implementations of random forest do not produce prediction intervals out-of-the-box. We will use a non-parametric (no distributional assumptions) and model-agnostic approach to constructing prediction intervals via the probably package.\n\nconformalised_rf &lt;- int_conformal_split(fit_rf, data_train)\nconformalised_rf$training &lt;- data_train\n\nWe can view the predictions of the random forest model:\n\n\n\n\nPredicted and observed Miles per Gallon for testing set using conformalised random forest (95% prediction intervals).\n\n\nMost of the testing observations fall within the 95% prediction intervals, though the predicted Miles per Gallon for larger weights are quite poor.\n\n\nModel versioning, sharing, and deployment\nWe will demonstrate how to perform model versioning, sharing, and deployment using a combination of pins, vetiver, and plumber.\nIn this example, we will first save our random forest model to an S3 bucket using pins and vetiver.\n\nboard &lt;- board_s3(\n  \"data\", \n  access_key = \"user\", \n  secret_access_key = \"password\", \n  region = \"us-east-2\", \n  endpoint = Sys.getenv(\"S3_ENDPOINT_URL\") \n)\n\nv_model &lt;- vetiver_model(conformalised_rf, \"random_forest\")\nvetiver_pin_write(v_model, board = board)\n\nvetiver offers support for generating model cards from an RMD template file. We will store a rendered model card as an HTML file within an S3 bucket using pins:\n\nboard |&gt; \n  pin_upload(\n    here(\"pages\", \"tidymodels_workshop\", \"cards\", \"card.html\"), \n    \"random_forest_card\"\n  )\n\nWe will next load and interact with the saved model locally using a plumber web application.\n\nSys.setenv(\"MODEL_CARD_NAME\" = \"random_forest_card\")\n\nloaded_v &lt;- board |&gt; \n  vetiver_pin_read(\"random_forest\")\n\npr(here(\"app\", \"api\", \"plumber.R\")) |&gt;\n  vetiver_api(loaded_v) |&gt;\n  pr_run(port = 8088)\n\n\n\nDocker\nDocker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container. This ensures that the application runs consistently across different environments — whether on a developer’s laptop, a testing server, or a production cloud environment. Docker helps developers “build once, run anywhere” without worrying about environment mismatches.\nOur objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:\n\nWe have a Dockerfile which contains a sequence of steps needed to build a Docker image. We copy our code from the R workshop repo into the Docker image (including the plumber web application code).\nWe define a pipeline that builds the Docker image and pushes it into a container repository.\nOur stored image may be found in the GitHub container repository.\nWe can then pull down our stored image and instantiate a container to deploy our plumber web application, either using Docker directly or with a container orchestration platform such as Kubernetes.\nOur model can then be loaded into the web application within the container via S3.\n\n\n\nKubernetes\nKubernetes is an open-source platform that automates the deployment, scaling, and management of containerised applications, such as our deployed models.\nIt organizes containers into logical units called pods, schedules them across a cluster of machines, and handles networking, storage, and load balancing. This ensures that your applications run reliably even as demand changes or failures occur. Kubernetes also provides self-healing features, automatically restarting or rescheduling containers when they fail.\nIn brief:\n\nKubernetes will pull down our Docker image containing our plumber web application.\nKubernetes will then deploy our web application within a pod inside our Kubernetes cluster.\nOur S3 server is also running on Kubernetes, allowing us to load our model and any other artifacts of interest.",
     "crumbs": [
       "Tidymodels",
-      "Machine Learning Workflow using H2O"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#results",
-    "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#results",
-    "title": "Machine Learning Workflow using H2O",
-    "section": "Results",
-    "text": "Results\nWe next view the evaluation results of the AutoML algorithm, sorting by predictive accuracy using the mean absolute error (MAE) metric.\n\nrank_results(auto_fit) |&gt;\n  filter(.metric == \"mae\") |&gt;\n  arrange(rank)\n\n# A tibble: 43 × 5\n   id                                             algorithm  .metric  mean  rank\n   &lt;chr&gt;                                          &lt;chr&gt;      &lt;chr&gt;   &lt;dbl&gt; &lt;int&gt;\n 1 GBM_grid_1_AutoML_3_20251003_32542_model_13    gradient … mae      1.85     1\n 2 GBM_grid_1_AutoML_3_20251003_32542_model_18    gradient … mae      1.93     2\n 3 DRF_1_AutoML_3_20251003_32542                  random fo… mae      1.94     3\n 4 GBM_5_AutoML_3_20251003_32542                  gradient … mae      1.97     4\n 5 GBM_grid_1_AutoML_3_20251003_32542_model_17    gradient … mae      2.01     5\n 6 GBM_grid_1_AutoML_3_20251003_32542_model_8     gradient … mae      2.03     6\n 7 GLM_1_AutoML_3_20251003_32542                  glm        mae      2.06     7\n 8 XGBoost_grid_1_AutoML_3_20251003_32542_model_2 xgboost    mae      2.08     8\n 9 GBM_grid_1_AutoML_3_20251003_32542_model_21    gradient … mae      2.09     9\n10 XRT_1_AutoML_3_20251003_32542                  random fo… mae      2.11    10\n# ℹ 33 more rows\n\n\nThe generalised linear models (GLMs) and gradient boosting machine (GBM) algorithms show promising results. We can next visualise the stacking ensemble member weights from H2O’s AutoML algorithm.\n\np &lt;- auto_fit |&gt;\n  extract_fit_parsnip() |&gt;\n  member_weights() |&gt;\n  unnest(importance) |&gt;\n  filter(type == \"scaled_importance\") |&gt;\n  ggplot() +\n  geom_boxplot(aes(value, algorithm)) +\n  scale_x_sqrt() +\n  labs(y = NULL, x = \"scaled importance\", title = \"Member importance in AutoML model\")\n\nggplotly(p)\n\n\n\n\n\n\n\nFigure 1: H20 AutoML model importances.\n\n\n\n\nThis plot shows that the GLM and GBM models are more heavily weighted in the ensemble than the other supported algorithms.",
-    "crumbs": [
-      "Tidymodels",
-      "Machine Learning Workflow using H2O"
+      "MLOps using vetiver"
     ]
   },
   {
@@ -77,6 +66,127 @@
     ]
   },
   {
+    "objectID": "pages/tidymodels_workshop/3_ml_workflow_h2o.html",
+    "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html",
+    "title": "Machine Learning Workflow using H2O",
+    "section": "",
+    "text": "In this section, we will demonstrate how one may train a machine learning model and tune its hyper-parameters using the tidymodels framework. For more information, click this link.\nWe will combine tidymodels with H2O. H2O is an open-source, distributed machine learning platform designed for scalable and fast data analysis. It’s widely used for building predictive models on large datasets and supports both traditional machine learning algorithms and modern AI methods.\nWe first load all required dependencies.\n\nbox::use(../../R/proj_utils)\nbox::use(../../R/tidymodels_deployment)\n\nbox::use(\n  dials[svm_margin, trees, penalty, mixture],\n  readr[read_csv, read_file],\n  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],\n  here[here],\n  dplyr[mutate, bind_rows, arrange, filter, select, pull], \n  purrr[pluck],\n  ranger[ranger],\n  kernlab,\n  rsample[initial_split, vfold_cv, training, testing],\n  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg, auto_ml],\n  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],\n  yardstick[rmse, mae, metric_set, metrics],\n  hardhat[tune],\n  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon, geom_boxplot, scale_x_sqrt],\n  workflows[workflow, add_recipe, add_model, fit],\n  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],\n  stacks[stacks, add_candidates, blend_predictions, fit_members],\n  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],\n  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],\n  paws.common,\n  paws.storage,\n  plotly[ggplotly],\n  probably[int_conformal_split, cal_plot_regression],\n  plumber[pr, pr_run],\n  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],\n  DALEXtra[explain_tidymodels],\n  glmnet,\n  zeallot[...],\n  targets[tar_make],\n  h2o[h2o.connect, h2o.init],\n  agua[extract_fit_parsnip, rank_results, member_weights],\n  tidyr[unnest]\n)\n\nRegistered S3 method overwritten by 'butcher':\n  method                 from    \n  as.character.dev_topic generics\n\nsource(here(\"R/probably_vetiver.R\"))",
+    "crumbs": [
+      "Tidymodels",
+      "Machine Learning Workflow using H2O"
+    ]
+  },
+  {
+    "objectID": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#results",
+    "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#results",
+    "title": "Machine Learning Workflow using H2O",
+    "section": "Results",
+    "text": "Results\nWe next view the evaluation results of the AutoML algorithm, sorting by predictive accuracy using the mean absolute error (MAE) metric.\n\nrank_results(auto_fit) |&gt;\n  filter(.metric == \"mae\") |&gt;\n  arrange(rank)\n\n# A tibble: 54 × 5\n   id                                              algorithm .metric  mean  rank\n   &lt;chr&gt;                                           &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt; &lt;int&gt;\n 1 GLM_1_AutoML_5_20251003_34007                   glm       mae      2.10     1\n 2 GBM_grid_1_AutoML_5_20251003_34007_model_33     gradient… mae      2.22     2\n 3 StackedEnsemble_AllModels_2_AutoML_5_20251003_… stacking  mae      2.27     3\n 4 GBM_grid_1_AutoML_5_20251003_34007_model_41     gradient… mae      2.31     4\n 5 GBM_grid_1_AutoML_5_20251003_34007_model_15     gradient… mae      2.33     5\n 6 GBM_grid_1_AutoML_5_20251003_34007_model_7      gradient… mae      2.36     6\n 7 GBM_grid_1_AutoML_5_20251003_34007_model_45     gradient… mae      2.37     7\n 8 XGBoost_grid_1_AutoML_5_20251003_34007_model_2  xgboost   mae      2.41     8\n 9 GBM_grid_1_AutoML_5_20251003_34007_model_13     gradient… mae      2.42     9\n10 XGBoost_3_AutoML_5_20251003_34007               xgboost   mae      2.43    10\n# ℹ 44 more rows\n\n\nThe generalised linear models (GLMs) and gradient boosting machine (GBM) algorithms show promising results. We can next visualise the stacking ensemble member weights from H2O’s AutoML algorithm.\n\np &lt;- auto_fit |&gt;\n  extract_fit_parsnip() |&gt;\n  member_weights() |&gt;\n  unnest(importance) |&gt;\n  filter(type == \"scaled_importance\") |&gt;\n  ggplot() +\n  geom_boxplot(aes(value, algorithm)) +\n  scale_x_sqrt() +\n  labs(y = NULL, x = \"scaled importance\", title = \"Member importance in AutoML model\")\n\nggplotly(p)\n\n\n\n\n\n\n\nFigure 1: H20 AutoML model importances.\n\n\n\n\nThis plot shows that the GLM and GBM models are more heavily weighted in the ensemble than the other supported algorithms.",
+    "crumbs": [
+      "Tidymodels",
+      "Machine Learning Workflow using H2O"
+    ]
+  },
+  {
+    "objectID": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#partial-dependence",
+    "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#partial-dependence",
+    "title": "Machine Learning Workflow using H2O",
+    "section": "Partial Dependence",
+    "text": "Partial Dependence\nWe can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features.\n\n\nPreparation of a new explainer is initiated\n  -&gt; model label       :  conformal \n  -&gt; data              :  25  rows  10  cols \n  -&gt; target variable   :  25  values \n  -&gt; predict function  :  yhat.default will be used (  default  )\n  -&gt; predicted values  :  No value for predict function target column. (  default  )\n  -&gt; model_info        :  package Model of class: conformal_reg_split package unrecognized , ver. Unknown , task regression (  default  ) \n  -&gt; predicted values  :  predict function returns multiple columns:  3  (  default  ) \n  -&gt; residual function :  difference between y and yhat (  default  )\n  -&gt; residuals         :  numerical, min =  -5.812114 , mean =  -1.684618e-06 , max =  5.450653  \n  A new explainer has been created!  \n\n\nWarning: plotly.js does not (yet) support horizontal legend items \nYou can track progress here: \nhttps://github.com/plotly/plotly.js/issues/53 \n\n\n\n\n\n\n\n\nFigure 2: Partial dependence plots for the AutoML model.\n\n\n\n\nWe see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 5 and 7 cylinders.",
+    "crumbs": [
+      "Tidymodels",
+      "Machine Learning Workflow using H2O"
+    ]
+  },
+  {
+    "objectID": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#residuals",
+    "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#residuals",
+    "title": "Machine Learning Workflow using H2O",
+    "section": "Residuals",
+    "text": "Residuals\nWe will next produce a residuals plot to determine how well the model predicted Miles per Gallon at different values.\n\n\n`geom_smooth()` using method = 'loess' and formula = 'y ~ x'\n\n\nWarning: plotly.js does not (yet) support horizontal legend items \nYou can track progress here: \nhttps://github.com/plotly/plotly.js/issues/53 \n\n\n\n\n\n\n\n\nFigure 3: Residual plot for the AutoML model.\n\n\n\n\nWe see an S-shaped curve, suggesting that there is bias in the predictions. There is evidence of over-prediction for Miles per Gallon between 10 and 17, and between 21 and 28. Conversely, there is evidence of under-prediction for Miles per Gallon over 28 and between 17 and 22.",
+    "crumbs": [
+      "Tidymodels",
+      "Machine Learning Workflow using H2O"
+    ]
+  },
+  {
+    "objectID": "pages/tidymodels_workshop/1_intro.html",
+    "href": "pages/tidymodels_workshop/1_intro.html",
+    "title": "Tidymodels Workshop",
+    "section": "",
+    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "crumbs": [
+      "Tidymodels",
+      "Tidymodels Workshop"
+    ]
+  },
+  {
+    "objectID": "pages/tidymodels_workshop/1_intro.html#tidymodels",
+    "href": "pages/tidymodels_workshop/1_intro.html#tidymodels",
+    "title": "Tidymodels Workshop",
+    "section": "",
+    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "crumbs": [
+      "Tidymodels",
+      "Tidymodels Workshop"
+    ]
+  },
+  {
+    "objectID": "pages/index.html",
+    "href": "pages/index.html",
+    "title": "Introduction",
+    "section": "",
+    "text": "Workshops on pipeline development and model deployment onto Kubernetes via Docker using R.",
+    "crumbs": [
+      "Workshop Introduction",
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "pages/index.html#introduction",
+    "href": "pages/index.html#introduction",
+    "title": "Introduction",
+    "section": "",
+    "text": "Workshops on pipeline development and model deployment onto Kubernetes via Docker using R.",
+    "crumbs": [
+      "Workshop Introduction",
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "pages/index.html#tidymodels",
+    "href": "pages/index.html#tidymodels",
+    "title": "Introduction",
+    "section": "Tidymodels",
+    "text": "Tidymodels\n\nIntroduction\nThis workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\nHelpful background knowledge\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\nCoordinators\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "crumbs": [
+      "Workshop Introduction",
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "pages/index.html#stan-and-causal-inference",
+    "href": "pages/index.html#stan-and-causal-inference",
+    "title": "Introduction",
+    "section": "Stan and Causal Inference",
+    "text": "Stan and Causal Inference\n\nIntroduction\nThis workshop provides an overview of Bayesian modelling and causal inference using brms and cmdstanr.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\nHelpful background knowledge\nSome familiarity with R. Statistical concepts such as priors, posteriors, and Bayes’ rule.\n\n\nCoordinators\n\nTom Moore (Tom.Moore@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "crumbs": [
+      "Workshop Introduction",
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "pages/coordinators.html",
+    "href": "pages/coordinators.html",
+    "title": "Coordinators",
+    "section": "",
+    "text": "James Bristow\nJames is a data scientist who specialises in Bayesian inference, machine learning, and semi-mechanistic modelling. He currently works part-time at PFR, primarily working with the crop modelling team using simulation platforms such as Agricultural Production Systems sIMulator (APSIM) and Growth Grammar-related Interactive Modelling Platform (GroIMP). James is also completing a PhD in statistical epidemiology at Massey University, focusing on the application of spatiotemporal modelling to Salmonella case counts within New Zealand, alongside animal influenza sequence data as part of an international collaboration with Cornell University. He completed his Master’s degree on Bayesian age and growth modelling of chondrichthyans with National Institute of Water and Atmospheric research (NIWA) as supported by a Fisheries New Zealand scholarship.\n\n\nJingjing Zhang\nJingjing is a data scientist and a quantitative ecologist specialising in using both statistical and simulation modelling tools to study the patterns of time-series and/or spatial data in ecology. Prior to joining PFR, Jingjing worked as a lecturer at the Auckland University of Technology. She completed Ph.D. at the University of Auckland, and afterwards worked as a quantitative Postdoc Research Fellow within NIWA. Her research interests are quantitative ecological modelling, the development of virtual ecology and its software tools.\n\n\nHana Liang\nHana is a data scientist based in Auckland. Since joining PFR, she has been working on various projects, focusing on sensor data ingestion and visualisation, model calibration, workflow orchestration, and pipeline implementation and deployment. She is also involved in computer vision projects, including deep learning–based image analysis. Hana has a bachelor’s degree from the University of Auckland majoring in Data Science and is currently studying a Master’s in Data Science part-time.\n\n\nLindy Guo\nLindy is a statistical scientist at PFR, bringing expertise in statistical analysis to the organization. Her background reflects a strong focus on statistical analysis and research, with experience in applying statistical methodologies to research initiatives. In their role as statistician, Lindy contributes to research activities, applying principles of biometrical analysis and experimental design. They are involved in data interpretation and statistical modeling to support research objectives. Prior to this, Lindy served as a statistician at AgResearch, where they focused on data analysis and statistical inference. Their work history includes a Teaching Assistant position at The University of Auckland. Lindy’s expertise is supported by a Master of Statistics degree from Auckland University, demonstrating applied statistical knowledge.\n\n\nTom Moore\nTom is a quantitative ecologist specialising in integrating scientific hypotheses into statistical models to address causal questions. During his PhD in freshwater ecology, he focused on examining the potential threats posed by non-native species to Kakāhi (mussels) using Bayesian inference techniques and structural causal models. In addition to expertise in ecological research, Tom has a strong background in applied statistics. He is particularly interested in the areas of nitrogen pollution, entomology, and invasive species, where he uses data spanning across time and space. One of his ongoing research projects involves investigating the impact of biocontrol methods on managing Queensland fruit fly populations in Australia, which can be used as a case study to introduce causal inference to ecologists.",
+    "crumbs": [
+      "Workshop Introduction",
+      "Coordinators"
+    ]
+  },
+  {
     "objectID": "pages/tidymodels_workshop/2_ml_workflow.html",
     "href": "pages/tidymodels_workshop/2_ml_workflow.html",
     "title": "Machine Learning Workflow",
@@ -129,83 +239,6 @@
     "crumbs": [
       "Tidymodels",
       "Machine Learning Workflow"
-    ]
-  },
-  {
-    "objectID": "pages/coordinators.html",
-    "href": "pages/coordinators.html",
-    "title": "Coordinators",
-    "section": "",
-    "text": "James Bristow\nJames is a data scientist who specialises in Bayesian inference, machine learning, and semi-mechanistic modelling. He currently works part-time at PFR, primarily working with the crop modelling team using simulation platforms such as Agricultural Production Systems sIMulator (APSIM) and Growth Grammar-related Interactive Modelling Platform (GroIMP). James is also completing a PhD in statistical epidemiology at Massey University, focusing on the application of spatiotemporal modelling to Salmonella case counts within New Zealand, alongside animal influenza sequence data as part of an international collaboration with Cornell University. He completed his Master’s degree on Bayesian age and growth modelling of chondrichthyans with National Institute of Water and Atmospheric research (NIWA) as supported by a Fisheries New Zealand scholarship.\n\n\nJingjing Zhang\nJingjing is a data scientist and a quantitative ecologist specialising in using both statistical and simulation modelling tools to study the patterns of time-series and/or spatial data in ecology. Prior to joining PFR, Jingjing worked as a lecturer at the Auckland University of Technology. She completed Ph.D. at the University of Auckland, and afterwards worked as a quantitative Postdoc Research Fellow within NIWA. Her research interests are quantitative ecological modelling, the development of virtual ecology and its software tools.\n\n\nHana Liang\nHana is a data scientist based in Auckland. Since joining PFR, she has been working on various projects, focusing on sensor data ingestion and visualisation, model calibration, workflow orchestration, and pipeline implementation and deployment. She is also involved in computer vision projects, including deep learning–based image analysis. Hana has a bachelor’s degree from the University of Auckland majoring in Data Science and is currently studying a Master’s in Data Science part-time.\n\n\nLindy Guo\nLindy is a statistical scientist at PFR, bringing expertise in statistical analysis to the organization. Her background reflects a strong focus on statistical analysis and research, with experience in applying statistical methodologies to research initiatives. In their role as statistician, Lindy contributes to research activities, applying principles of biometrical analysis and experimental design. They are involved in data interpretation and statistical modeling to support research objectives. Prior to this, Lindy served as a statistician at AgResearch, where they focused on data analysis and statistical inference. Their work history includes a Teaching Assistant position at The University of Auckland. Lindy’s expertise is supported by a Master of Statistics degree from Auckland University, demonstrating applied statistical knowledge.\n\n\nTom Moore\nTom is a quantitative ecologist specialising in integrating scientific hypotheses into statistical models to address causal questions. During his PhD in freshwater ecology, he focused on examining the potential threats posed by non-native species to Kakāhi (mussels) using Bayesian inference techniques and structural causal models. In addition to expertise in ecological research, Tom has a strong background in applied statistics. He is particularly interested in the areas of nitrogen pollution, entomology, and invasive species, where he uses data spanning across time and space. One of his ongoing research projects involves investigating the impact of biocontrol methods on managing Queensland fruit fly populations in Australia, which can be used as a case study to introduce causal inference to ecologists.",
-    "crumbs": [
-      "Workshop Introduction",
-      "Coordinators"
-    ]
-  },
-  {
-    "objectID": "pages/index.html",
-    "href": "pages/index.html",
-    "title": "Introduction",
-    "section": "",
-    "text": "Workshops on pipeline development and model deployment onto Kubernetes via Docker using R.",
-    "crumbs": [
-      "Workshop Introduction",
-      "Introduction"
-    ]
-  },
-  {
-    "objectID": "pages/index.html#introduction",
-    "href": "pages/index.html#introduction",
-    "title": "Introduction",
-    "section": "",
-    "text": "Workshops on pipeline development and model deployment onto Kubernetes via Docker using R.",
-    "crumbs": [
-      "Workshop Introduction",
-      "Introduction"
-    ]
-  },
-  {
-    "objectID": "pages/index.html#tidymodels",
-    "href": "pages/index.html#tidymodels",
-    "title": "Introduction",
-    "section": "Tidymodels",
-    "text": "Tidymodels\n\nIntroduction\nThis workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\nHelpful background knowledge\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\nCoordinators\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
-    "crumbs": [
-      "Workshop Introduction",
-      "Introduction"
-    ]
-  },
-  {
-    "objectID": "pages/index.html#stan-and-causal-inference",
-    "href": "pages/index.html#stan-and-causal-inference",
-    "title": "Introduction",
-    "section": "Stan and Causal Inference",
-    "text": "Stan and Causal Inference\n\nIntroduction\nThis workshop provides an overview of Bayesian modelling and causal inference using brms and cmdstanr.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\nHelpful background knowledge\nSome familiarity with R. Statistical concepts such as priors, posteriors, and Bayes’ rule.\n\n\nCoordinators\n\nTom Moore (Tom.Moore@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
-    "crumbs": [
-      "Workshop Introduction",
-      "Introduction"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/1_intro.html",
-    "href": "pages/tidymodels_workshop/1_intro.html",
-    "title": "Tidymodels Workshop",
-    "section": "",
-    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
-    "crumbs": [
-      "Tidymodels",
-      "Tidymodels Workshop"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/1_intro.html#tidymodels",
-    "href": "pages/tidymodels_workshop/1_intro.html#tidymodels",
-    "title": "Tidymodels Workshop",
-    "section": "",
-    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
-    "crumbs": [
-      "Tidymodels",
-      "Tidymodels Workshop"
     ]
   },
   {

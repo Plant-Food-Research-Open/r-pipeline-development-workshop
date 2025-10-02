@@ -486,7 +486,7 @@ under-prediction for Miles per Gallon over 29 and between 12.5 and 20.
 
 # Model versioning, sharing, and deployment
 
-Finally, we will demonstrate how to perform model versioning, sharing,
+Finally, we will demonstrate how to perform model versioning, sharing, and
 deployment using a combination of:
 
 -   [pins: For sharing and versioning resources and
@@ -496,8 +496,7 @@ deployment using a combination of:
 -   [plumber: For creating light-weight web applications, and deploying models
     as microservices](https://www.rplumber.io/)
 
-In this example, we will first save our conformalised model to a local
-temporary directory using *pins* and *vetiver*
+In this example, we will first save our conformalised model to a local temporary directory using *pins* and *vetiver*
 
 ```{r tidymodels-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 board <- board_temp()
@@ -505,8 +504,7 @@ v_model <- vetiver_model(conformalised_regressor, "conformal_ensemble")
 vetiver_pin_write(v_model, board = board)
 ```
 
-We will next load and interact with the saved model using a plumber web
-application.
+We will next load and interact with the saved model using a plumber web application.
 
 ```{r tidymodels-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 loaded_v <- board |> 
@@ -574,4 +572,10 @@ tar_make(
   script = here("pipelines", "_targets_tidymodels_deployment.R"),
   use_crew = TRUE
 )
+```
+
+To view the targets pipeline code, run the following:
+
+```{r tidymodels-targets-pipeline, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+file.edit(here("pipelines", "_targets_tidymodels_deployment.R"))
 ```

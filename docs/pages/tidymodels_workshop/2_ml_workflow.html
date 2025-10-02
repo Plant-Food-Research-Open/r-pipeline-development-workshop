@@ -218,6 +218,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Machine Learning Workflow using H2O</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../pages/tidymodels_workshop/4_mlops_vetiver.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLOps using vetiver</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -790,7 +796,7 @@ Figure&nbsp;4: Residual plot for the conformalised model.
 </section>
 <section id="model-versioning-sharing-and-deployment" class="level1">
 <h1>Model versioning, sharing, and deployment</h1>
-<p>Finally, we will demonstrate how to perform model versioning, sharing, deployment using a combination of:</p>
+<p>Finally, we will demonstrate how to perform model versioning, sharing, and deployment using a combination of:</p>
 <ul>
 <li><a href="https://pins.rstudio.com/">pins: For sharing and versioning resources and artifacts</a></li>
 <li><a href="https://rstudio.github.io/vetiver-r/">vetiver: For model versioning, sharing, and deployment</a></li>
@@ -855,6 +861,10 @@ Create a Model Card for your published model
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">script =</span> <span class="fu">here</span>(<span class="st">"pipelines"</span>, <span class="st">"_targets_tidymodels_deployment.R"</span>),</span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">use_crew =</span> <span class="cn">TRUE</span></span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To view the targets pipeline code, run the following:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.edit</span>(<span class="fu">here</span>(<span class="st">"pipelines"</span>, <span class="st">"_targets_tidymodels_deployment.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 

@@ -192,9 +192,57 @@ Most of the testing observations fall within the 95% prediction
 intervals. Given a large enough testing dataset, we would expect roughly
 5% of new observations to fall outside of the intervals.
 
+# Model Interpretation
+
+An AutoML model will be relatively black-box in nature. For this tutorial, we will demonstrate three functions offered by DALEX.
+
+## Partial Dependence
+
+We can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features.
+
+```{r fig-conformal-pdp, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Partial dependence plots for the AutoML model.
+
+conformal_explainer <- 
+  explain_tidymodels(
+    model = conformalised_regressor,
+    data = data_train |> select(-mpg), 
+    y = data_train |>  pull(mpg),
+    label = "conformal"
+  )
+
+p <- model_profile(
+  conformal_explainer,
+  type = "partial"
+) |>
+  plot() 
+
+ggplotly(p)
+```
+
+We see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 5 and 7 cylinders.
+
+## Residuals
+
+We will next produce a residuals plot to determine how well the model
+predicted Miles per Gallon at different values.
+
+```{r fig-conformal-residuals, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Residual plot for the AutoML model.
+
+p <- model_diagnostics(
+  conformal_explainer
+) |>
+  plot(variable = "y_hat", yvariable = "residuals")
+
+ggplotly(p)
+```
+
+We see an S-shaped curve, suggesting that there is bias in the predictions. There is evidence of over-prediction for Miles per Gallon between 10 and 17, and between 21 and 28. Conversely, there is evidence of under-prediction for Miles per Gallon over 28 and between 17 and 22.
+
 # Model versioning, sharing, and deployment
 
-Finally, we will demonstrate how to perform model versioning, sharing,
+Finally, we will demonstrate how to perform model versioning, sharing, and
 deployment using a combination of *pins*, *vetiver*, and *plumber*. In this example, we will first save our AutoML model to a local temporary directory using *pins* and *vetiver*
 
 ```{r h2o-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
@@ -225,4 +273,10 @@ tar_make(
   script = here("pipelines", "_targets_h2o_deployment.R"),
   use_crew = TRUE
 )
+```
+
+To view the targets pipeline code, run the following:
+
+```{r h2o-targets-pipeline, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+file.edit(here("pipelines", "_targets_h2o_deployment.R"))
 ```

@@ -1,0 +1,228 @@
+---
+title: "MLOps using vetiver"
+date: today
+authors: "James Bristow, Jingjing Zhang, Hana Liang, Lindy Guo"
+fig-pos: 'H'
+toc: true
+lof: true
+lot: true
+link-citations: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction
+
+In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes*. As a reminder:
+
+- [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
+- [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
+
+We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
+
+We first load all required dependencies.
+
+```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+Sys.setenv("S3_ENDPOINT_URL" = "http://127.0.0.1:9000")
+
+box::use(../../R/proj_utils)
+box::use(../../R/tidymodels_deployment)
+
+box::use(
+  dials[svm_margin, trees, penalty, mixture],
+  readr[read_csv, read_file],
+  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],
+  here[here],
+  dplyr[mutate, bind_rows, arrange, select, pull],
+  purrr[pluck],
+  ranger[ranger],
+  kernlab,
+  rsample[initial_split, vfold_cv, training, testing],
+  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],
+  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],
+  yardstick[rmse, mae, metric_set, metrics],
+  hardhat[tune],
+  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],
+  workflows[workflow, add_recipe, add_model, fit],
+  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],
+  stacks[stacks, add_candidates, blend_predictions, fit_members],
+  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],
+  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],
+  paws.common,
+  paws.storage,
+  plotly[ggplotly],
+  probably[int_conformal_split, cal_plot_regression],
+  plumber[pr, pr_run],
+  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],
+  DALEXtra[explain_tidymodels],
+  glmnet,
+  zeallot[...],
+  targets[tar_make]
+)
+
+source(here("R/probably_vetiver.R"))
+```
+
+# Data
+
+We will next load an example dataset. [For this tutorial, we will use
+the mtcars
+dataset.](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html)
+
+```{r load-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+data("mtcars")
+head(mtcars)
+```
+
+We will next perform a 80-20 train-test data split. 
+
+```{r split-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+data_split <- mtcars |>
+  initial_split(
+    prop = 0.8
+  )
+
+data_train <- training(data_split)
+data_test  <- testing(data_split)
+
+head(data_train)
+```
+
+Next, we will create a data preprocessing recipe using the [recipes
+package](https://recipes.tidymodels.org/), which will:
+
+-   Drop zero and near zero-variance columns.
+-   Normalise all numeric columns using Z-standardisation.
+-   Impute missing data using k nearest neighbor imputation.
+
+```{r process-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+training_recipe <- recipe(data_train) |>
+  update_role(everything(), new_role = "predictor") |>
+  update_role(mpg, new_role = "outcome") |>
+  step_zv() |>
+  step_nzv() |>
+  step_normalize(all_numeric(), -all_outcomes()) |>
+  step_impute_knn()
+```
+
+# Training
+
+We will train a simple random forest model with default settings using tidymodels:
+
+```{r tidymodels-ml-rf, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+rf_recipe <- rand_forest() |> 
+  set_engine("ranger") |> 
+  set_mode("regression") 
+
+rf_workflow <- workflow() |> 
+  add_recipe(training_recipe) |> 
+  add_model(rf_recipe)
+
+fit_rf <- fit(rf_workflow, data = data_train) 
+```
+
+# Uncertainty Quantification
+
+Most implementations of random forest do not produce prediction intervals
+out-of-the-box. [We will use a non-parametric (no distributional assumptions) and model-agnostic approach to constructing prediction intervals via the *probably* package](https://probably.tidymodels.org/).
+
+```{r tidymodels-conformalisation, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+conformalised_rf <- int_conformal_split(fit_rf, data_train)
+conformalised_rf$training <- data_train
+```
+
+We can view the predictions of the random forest model:
+
+```{r tidymodels-conformalised-rf-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised random forest (95% prediction intervals).
+
+p <- conformalised_rf |> 
+  predict(new_data = data_test, level = 0.95) |>
+  mutate(
+    mpg = data_test$mpg,
+    wt = data_test$wt
+  ) |>
+  ggplot(aes(x = wt, y = mpg, color = "Observed MPG")) +
+  geom_point() +
+  geom_point(aes(x = wt, y = .pred, color = "Predicted MPG")) +
+  geom_ribbon(
+    aes(ymin = .pred_lower, ymax = .pred_upper, colour = "Predicted MPG"),
+    alpha = 0.2
+  ) +
+  labs(x = "Weight", y = "Miles per Gallon (MPG)", color = "Variable") +
+  theme_minimal() 
+
+ggplotly(p)
+```
+
+Most of the testing observations fall within the 95% prediction intervals, though the predicted Miles per Gallon for larger weights are quite poor.
+
+# Model versioning, sharing, and deployment
+
+We will demonstrate how to perform model versioning, sharing, and
+deployment using a combination of *pins*, *vetiver*, and *plumber*. 
+
+In this example, we will first save our random forest model to an S3 bucket using *pins* and *vetiver*.
+
+```{r tidymodels-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+board <- board_s3(
+  "data", 
+  access_key = "user", 
+  secret_access_key = "password", 
+  region = "us-east-2", 
+  endpoint = Sys.getenv("S3_ENDPOINT_URL") 
+)
+
+v_model <- vetiver_model(conformalised_rf, "random_forest")
+vetiver_pin_write(v_model, board = board)
+```
+
+*vetiver* offers support for generating model cards from an RMD template file. We will store a rendered model card as an HTML file within an S3 bucket using *pins*:
+
+```{r tidymodels-card-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+board |> 
+  pin_upload(
+    here("pages", "tidymodels_workshop", "cards", "card.html"), 
+    "random_forest_card"
+  )
+```
+
+We will next load and interact with the saved model locally using a plumber web application.
+
+```{r tidymodels-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+Sys.setenv("MODEL_CARD_NAME" = "random_forest_card")
+
+loaded_v <- board |> 
+  vetiver_pin_read("random_forest")
+
+pr(here("app", "api", "plumber.R")) |>
+  vetiver_api(loaded_v) |>
+  pr_run(port = 8088)
+```
+
+# Docker
+
+Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container. This ensures that the application runs consistently across different environments — whether on a developer's laptop, a testing server, or a production cloud environment. Docker helps developers "build once, run anywhere" without worrying about environment mismatches.
+
+Our objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:
+
+1. [We have a Dockerfile which contains a sequence of steps needed to build a Docker image. We copy our code from the R workshop repo into the Docker image (including the plumber web application code).](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/blob/main/dockerfiles/shiny/Dockerfile.0.1.0)
+2. [We define a pipeline that builds the Docker image and pushes it into a container repository.](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/blob/main/.github/workflows/build-r.yaml)
+3. [Our stored image may be found in the GitHub container repository.](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/pkgs/container/shiny-rpipelines)
+4. We can then pull down our stored image and instantiate a container to deploy our plumber web application, either using Docker directly or with a container orchestration platform such as Kubernetes.
+5. Our model can then be loaded into the web application within the container via S3.
+
+# Kubernetes
+
+Kubernetes is an open-source platform that automates the deployment, scaling, and management of containerised applications, such as our deployed models.
+
+It organizes containers into logical units called pods, schedules them across a cluster of machines, and handles networking, storage, and load balancing. This ensures that your applications run reliably even as demand changes or failures occur. Kubernetes also provides self-healing features, automatically restarting or rescheduling containers when they fail. 
+
+In brief:
+
+1. Kubernetes will pull down our Docker image containing our plumber web application. 
+2. Kubernetes will then deploy our web application within a pod inside our Kubernetes cluster.
+3. Our S3 server is also running on Kubernetes, allowing us to load our model and any other artifacts of interest.
+
