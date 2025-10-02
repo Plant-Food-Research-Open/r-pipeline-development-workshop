@@ -23,7 +23,7 @@ spec:
                   name: port-3838
             path: /
             pathType: Prefix
-    - host: minio.r-pipelines.k8s.k8s.dev.pfr.co.nz
+    - host: minio.r-pipelines.k8s.dev.pfr.co.nz
       http:
         paths:
           - backend:
