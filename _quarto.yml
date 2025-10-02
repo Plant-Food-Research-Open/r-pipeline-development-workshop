@@ -25,9 +25,10 @@ website:
     style: "docked"
     search: true
     contents:
-      - section: "Introduction"
+      - section: "Workshop Introduction"
         contents:
         - pages/index.qmd
+        - pages/coordinators.qmd
       - section: "Tidymodels"
         contents:
         - pages/tidymodels_workshop/1_intro.qmd

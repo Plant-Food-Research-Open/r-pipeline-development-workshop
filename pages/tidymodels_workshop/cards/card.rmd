@@ -1,0 +1,147 @@
+---
+title: "Model Card: Tidymodels Stacking Ensemble"
+date: '`r Sys.Date()`'
+output: 
+  html_document
+params:
+    name: conformal_ensemble
+    version: NULL
+---
+
+```{r, echo = FALSE, output=TRUE, eval=TRUE}
+library(vetiver)
+library(pins)
+library(yardstick)
+knitr::opts_chunk$set(echo = FALSE)
+
+board <- board_s3(
+  "data", 
+  access_key = "user", 
+  secret_access_key = "password", 
+  region = "us-east-2", 
+  endpoint = "http://127.0.0.1:9000"
+)
+
+v <- vetiver_pin_read(board, params$name, version = params$version)
+v_meta <- pin_meta(board, params$name)
+
+box::use(
+  dials[svm_margin, trees],
+  ggplot2[theme_set, theme_light],
+  readr[read_csv],
+  tune[control_bayes, extract_parameter_set_dials],
+  here[here],
+  ranger[ranger],
+  kernlab,
+  rsample[initial_split, vfold_cv],
+  parsnip[rand_forest, svm_linear],
+  dplyr[mutate],
+  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update],
+  yardstick[rmse, mae],
+  hardhat[tune],
+  workflows[workflow],
+  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map],
+  stacks[stacks, add_candidates, blend_predictions, fit_members],
+  vetiver[vetiver_model, vetiver_pin_write, vetiver_api],
+  pins[board_temp, board_s3, pin_write, pin_read, pin_upload, pin_download],
+  plumber[pr, pr_run],
+  DALEXtra[explain_tidymodels]
+)
+
+theme_set(theme_light())
+
+```
+
+A [model card](https://doi.org/10.1145/3287560.3287596) provides brief, transparent, responsible reporting for a trained machine learning model.
+
+## Model details
+
+- Developed by James Bristow
+- Name: conformal_ensemble
+- Version: 20251003
+- Framework: tidymodels
+- Target: mpg
+- Training Data: mtcars (32 rows, 11 columns)
+- If you have questions about this model, please contact [James Bristow](mailto:James.Bristow@plantandfood.co.nz){.email}
+
+
+## Intended use
+
+- The primary intended uses of this model are for predicting miles per gallon for cars with similar weight and horsepower.
+- The primary intended users of this model are car enthusiasts.
+- Some use cases are out of scope for this model, such as for safety-critical or real-world fuel efficiency forecasting.
+
+## Important aspects/factors
+
+- Predictors with most influence: weight (wt) and horsepower (hp).
+- Heavier cars result in lower mpg.
+- Higher horsepower result in lower mpg.
+- Data source: 1974 Motor Trend magazine road test (biased toward US cars of that era).
+- Scale: Very small dataset (n = 32), so model behavior is fragile.
+- Interpretability: Stacking ensemble may be challenging to directly interpret.
+
+## Metrics
+
+- The metrics used to evaluate this model are root mean squared error and mean absolute error. 
+- These metrics are computed via the [yardstick package.](https://yardstick.tidymodels.org/)
+- We chose these metrics because they are popular and interpretable evaluation metrics for predictive accuracy.
+
+## Training data & evaluation data
+
+- The training dataset for this model was [*mtcard* from the 1974 Motor Trend magazine road test](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html).
+- The training dataset for this model has the "prototype" or signature:
+
+```{r, eval=TRUE}
+dplyr::glimpse(v$prototype)
+```
+
+- The evaluation dataset used in this model card is an 80-20 train-test data split of *mtcars*.
+- We chose this evaluation data because for demonstration purposes.
+
+```{r, eval=TRUE}
+df <- v$model$training
+```
+
+## Quantitative analyses {.tabset}
+
+```{r, eval=TRUE}
+library(parsnip)
+library(workflows)
+library(probably)
+preds <- predict(v, df) |>
+  dplyr::bind_cols(df)
+
+preds  
+```
+
+### Overall model performance
+
+```{r, eval=TRUE}
+preds |>
+    metrics(mpg, .pred)
+```
+
+### Visualize model performance
+
+```{r, fig.height=3, eval=TRUE}
+library(ggplot2)
+p <- preds |>
+    ggplot(aes(mpg, .pred)) +
+    geom_abline(slope = 1, lty = 2, color = "darkblue", size = 1.2) +
+    geom_point(alpha = 0.5, show.legend = FALSE) +
+    geom_ribbon(aes(ymin = .pred_lower, ymax = .pred_upper), fill = "lightblue", alpha = 0.2)
+
+plotly::ggplotly(p)
+```
+
+## Ethical considerations
+
+- Small, biased dataset (1974 US cars only).
+- Not representative of modern vehicles.
+
+## Caveats & recommendations
+
+- This model is intended to be used with *mtcars* only.
+- This model Doesn't generalize outside *mtcars*.
+- Interpret results as illustrative, not prescriptive.
+- We recommend fitting a similar model to a larger and newer dataset.

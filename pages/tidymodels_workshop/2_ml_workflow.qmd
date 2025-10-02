@@ -14,44 +14,52 @@ editor:
 
 # Introduction
 
-This section will demonstrate how one may train a machine learning model and tune its hyper-parameters. We first load all
-required dependencies.
+In this section, we will demonstrate how one may train a machine learning model and tune its hyper-parameters using the *tidymodels* framework, which is composed of several packages for machine learning using tidyverse principles. *tidymodels* offers a unified interface to performing data preprocessing, modelling using various machine learning algorithms, mode assessment and visualisation, and cross-Validation & tuning. [For more information, click this link.](https://www.tidymodels.org/)  
+
+We first load all required dependencies.
 
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+box::use(../../R/proj_utils)
+box::use(../../R/tidymodels_deployment)
+
 box::use(
   dials[svm_margin, trees, penalty, mixture],
   readr[read_csv, read_file],
-  tune[control_grid, extract_parameter_set_dials],
+  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],
   here[here],
+  dplyr[mutate, bind_rows, arrange],
+  purrr[pluck],
   ranger[ranger],
   kernlab,
   rsample[initial_split, vfold_cv, training, testing],
   parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],
   recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update],
-  yardstick[rmse, mae, metric_set],
+  yardstick[rmse, mae, metric_set, metrics],
   hardhat[tune],
+  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],
   workflows[workflow, add_recipe, add_model],
-  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map],
+  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],
   stacks[stacks, add_candidates, blend_predictions, fit_members],
   vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],
-  pins[board_temp, board_s3, pin_write, pin_read, pin_upload, pin_download],
-  readr[read_file],
+  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],
   paws.common,
   paws.storage,
   plotly[ggplotly],
   probably[int_conformal_split, cal_plot_regression],
   plumber[pr, pr_run],
-  DALEX[feature_importance, model_profile, predict_profile],
+  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],
   DALEXtra[explain_tidymodels],
   glmnet,
   zeallot[...],
   targets[tar_make]
 )
+
+source(here("R/probably_vetiver.R"))
 ```
 
 # Data
 
-We will next load an example dataset. For this tutorial, we will use the mtcars dataset.
+We will next load an example dataset. [For this tutorial, we will use the mtcars dataset.](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html)
 
 ```{r load-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
@@ -59,12 +67,12 @@ data("mtcars")
 head(mtcars)
 ```
 
-We will next perform a 90-10 train-test data split.
+We will next perform a 80-20 train-test data split. We will train our model on 80% of the data, and assess it against the other 20%.
 
 ```{r split-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 data_split <- mtcars |>
   initial_split(
-    prop = 0.9
+    prop = 0.8
   )
 
 data_train <- training(data_split)
@@ -73,7 +81,7 @@ data_test  <- testing(data_split)
 head(data_train)
 ```
 
-Finally, we will create a data preprocessing recipe using the [recipes package](https://recipes.tidymodels.org/). This recipe will:
+Next, we will create a data preprocessing recipe using the [recipes package](https://recipes.tidymodels.org/), which is used to specify sequences of feature preprocessing steps. This recipe will:
 
 - Drop zero and near zero-variance columns.
 - Normalise all numeric columns using Z-standardisation.
@@ -91,7 +99,7 @@ training_recipe <- recipe(data_train) |>
 
 # Cross Validation
 
-We will next set up 5-fold cross validation, whereby the training dataset will be divided into 5 segments to tune the hyper-parameters of the machine learning models. 
+We will next set up k-fold cross validation using 5 folds. Our training set will be divided into 5 segments to assess its predictive performance and tune the hyper-parameters of the machine learning models. 
 
 ```{r tidymodels-cv, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 folds <- vfold_cv(
@@ -99,7 +107,7 @@ folds <- vfold_cv(
 )
 ``` 
 
-For hyper-parameter optimisation, we will combine 5-fold cross validation with a grid search over different hyper-parameter combinations. We will aim to optimise the predictive accuracy of the machine learning models using the root mean square (rmse) and mean absolute error (mae) metrics. 
+For hyper-parameter optimisation, we will combine 5-fold cross validation with a grid search over different hyper-parameter combinations. We will aim to optimise the predictive accuracy of the machine learning models using the root mean square (RMSE) and mean absolute error (MAE) metrics. 
 
 ```{r tidymodels-grid-search, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 metric <- metric_set(rmse, mae)
@@ -115,7 +123,11 @@ ctrl_grid <- control_grid(
 
 # Workflow Set
 
-We will next use the [workflowsets package](https://workflowsets.tidymodels.org/) to easily combine and compare machine learning workflows for multiple models. We next construct a workflow set composed of linear regression, random forest, and linear support vector machine models.
+We will next use the [workflowsets package](https://workflowsets.tidymodels.org/) to easily manage, combine, and compare several machine learning workflows for multiple models. We next construct a workflow set composed of:
+
+- Linear regression: We will use the *glmnet* package.
+- Random forest: We will use the *ranger* package.
+- Linear support vector machine: We will use the *kernlab* package.
 
 ```{r tidymodels-ml-recipes, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 lr_recipe <- linear_reg(mixture = tune(), penalty = tune()) |> 
@@ -131,7 +143,7 @@ svm_recipe <- svm_linear(margin = tune()) |>
   set_mode("regression") 
 ```
 
-We will next combine these 3 models together into a single workflowset.
+We will next combine these 3 model workflows together into a single workflowset, while incorporating the RMSE and MAE evaluation metrics, 5-fold cross-validation, and grid search hyper-parameter optimisation.
 
 ```{r tidymodels-workflowset, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 model_set <- workflow_set(
@@ -157,11 +169,11 @@ model_set <- workflow_set(
 
 We will define the grid of hyper-parameter values for performing grid search. The specification for each of our models is as follows:
 
-* Linear Regression: Mixure defines the weighting of L1 and L2 regularisation; a value of mixture = 1 corresponds to a pure lasso model, while mixture = 0 indicates ridge regression. Penalty refers to the strength of the regularisation.
-* Random Forest: Trees determines the number of ensemble members.
-* Support Vector Machine: 
+* Linear Regression: Mixure defines the weighting of L1 and L2 regularisation; a value of mixture = 1 corresponds to a pure LASSO model, while mixture = 0 indicates ridge regression. Penalty refers to the strength of the regularisation.
+* Random Forest: Trees determines the number of ensemble members, and hence the size of the ensemble.
+* Support Vector Machine: Margin refers to the epsilon smoothness hyper-parameter. Smaller values produce more support vectors which may lead to overfitting, while larger values produce fewer support vectors which may lead to underfitting.
 
-```{r tidymodels-hyperopt-grid, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r tidymodels-hyperopt-grid-spec, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 lr_params <- extract_parameter_set_dials(lr_recipe) |>
   update(
     mixture = mixture(c(0, 1)), penalty = penalty(c(0, 5))
@@ -178,7 +190,9 @@ svm_params <- extract_parameter_set_dials(svm_recipe) |>
   )
 ```
 
-```{r tidymodels-hyperopt-grid, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+We next execute the grid search for hyper-parameter optimisation.
+
+```{r tidymodels-hyperopt-grid-run, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
 model_set <- model_set |>
   option_add_parameters() |>
@@ -197,7 +211,274 @@ model_set <- model_set |>
 
 tuned_model_set <- model_set |>
   workflow_map(
-    "tune_bayes", 
+    "tune_grid", 
     seed = 1000
   )
+```
+
+## Results
+
+We will next visualise the results for the hyper-parameter optimisation of our 5-fold cross-validation procedure. We can compare the predictive performance of our 3 machine learning models.
+ 
+```{r tidymodels-hyperopt-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Hyper-parameter optimisation results via grid search for 5-fold cross validation.
+autoplot(tuned_model_set) |> 
+  ggplotly()
+```
+
+We can see that the random forest models appear to have the greatest predictive accuracy, with linear regression having the poorest, and support vector machine sitting in the middle. We finally retrieve the best fitted model, and evaluate it.
+
+```{r tidymodels-best-model, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+best_model <- fit_best(tuned_model_set)
+best_model
+```
+
+We can view the predictions of the best fitted model:
+
+```{r tidymodels-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Predicted and observed Miles per Gallon for testing set.
+p <- data_test |> 
+  mutate(
+    predicted_mpg = predict(best_model, new_data = data_test)  |> 
+      pluck(".pred")
+  ) |>
+  ggplot(aes(x = wt, y = mpg, color = "Observed MPG")) +
+  geom_point() +
+  geom_point(aes(x = wt, y = predicted_mpg, color = "Predicted MPG")) +
+  labs(x = "Weight", y = "Miles per Gallon (MPG)", color = "Variable") +
+  theme_minimal() 
+
+ggplotly(p)
+```
+
+# Stacking ensemble
+
+Rather than selecting only a single random forest model, we may instead construct an ensemble composed of all the tuned machine learning models. [We will make use of the *stacks* package to build a stacking ensemble.](https://stacks.tidymodels.org/). Under the hood, a LASSO meta-estimator will be trained upon the combined/stacked predictions of the above machine models against Miles per Gallon, which generally results in superior predictive performance.
+
+```{r tidymodels-stacking, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+stack_regressor <- stacks() |>
+  add_candidates(tuned_model_set) 
+
+invisible(capture.output(
+  stack_regressor <- stack_regressor |>
+  blend_predictions(
+    penalty =  10^(-10:-1),
+    mixture = 0,
+    times = 10
+  ) |>
+  fit_members()
+))
+
+stack_regressor
+```
+
+We can view the predictions of the stacking ensemble:
+
+```{r tidymodels-stacking-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Predicted and observed Miles per Gallon for testing set using stacking ensemble.
+p <- data_test |> 
+  mutate(
+    predicted_mpg = predict(stack_regressor, new_data = data_test)  |> 
+      pluck(".pred")
+  ) |>
+  ggplot(aes(x = wt, y = mpg, color = "Observed MPG")) +
+  geom_point() +
+  geom_point(aes(x = wt, y = predicted_mpg, color = "Predicted MPG")) +
+  labs(x = "Weight", y = "Miles per Gallon (MPG)", color = "Variable") +
+  theme_minimal() 
+
+ggplotly(p)
+```
+
+# Uncertainty Quantification
+
+Our stacking ensemble does not produce prediction intervals out-of-the-box. Hence, no in-built uncertainty quantification. There are various ways of constructing prediction intervals for our ensemble. [We will use a non-parametric (no distributional assumptions) and model-agnostic approach via the *probably* package](https://probably.tidymodels.org/). We will use *probably* to conformalise the stacking ensemble to produce non-parametric prediction intervals using conformal inference. [Refer to this document for more information on conformal inference.](https://arxiv.org/abs/2107.07511)
+
+```{r tidymodels-conformalisation, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+patched_stack_regressor <- tidymodels_deployment$patch_tidymodel(stack_regressor, training_recipe, data_train)
+conformalised_regressor <- int_conformal_split(patched_stack_regressor, data_train)
+conformalised_regressor$training <- data_train
+```
+
+We can next view a calibration plot of our conformalised model.
+
+```{r fig-conformal-ensemble-work-calibration, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Calibration plot of observed and predicted Miles per Gallon on testing data.
+
+p <- conformalised_regressor |>
+  predict(new_data = data_test, level = 0.95) |>
+  mutate(
+    mpg = data_test$mpg
+  ) |>
+  cal_plot_regression(truth = mpg, estimate = .pred) 
+
+ggplotly(p)
+```
+
+In this case, a diagonal line means that our model is producing reasonably well-calibrated prediction intervals. We can view the predictions produced by the conformalised model, this time with prediction intervals included:
+
+```{r tidymodels-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised model (95% prediction intervals).
+
+p <- conformalised_regressor |> 
+  predict(new_data = data_test, level = 0.95) |>
+  mutate(
+    mpg = data_test$mpg,
+    wt = data_test$wt
+  ) |>
+  ggplot(aes(x = wt, y = mpg, color = "Observed MPG")) +
+  geom_point() +
+  geom_point(aes(x = wt, y = .pred, color = "Predicted MPG")) +
+  geom_ribbon(
+    aes(ymin = .pred_lower, ymax = .pred_upper, colour = "Predicted MPG"),
+    alpha = 0.2
+  ) +
+  labs(x = "Weight", y = "Miles per Gallon (MPG)", color = "Variable") +
+  theme_minimal() 
+
+ggplotly(p)
+```
+
+Most of the testing observations fall within the 95% prediction intervals. Given a large enough testing dataset, we would expect roughly 5% of new observations to fall outside of the intervals. 
+
+# Model Interpretation
+
+A conformalised stacking ensemble will be relatively black-box in nature. Ideally, we would want to be able to interrogate and interpret our model. [The DALEX package can be used to facilitate this interpretability.](https://dalex.drwhy.ai/) For this tutorial, we will demonstrate three functions offered by DALEX.
+
+## Feature importances
+
+We will rank the importance of each feature by using a permutation-based approach. Here, we will evaluate how much a model's prediction error increases when you randomly shuffle a feature's values. If shuffling a feature doesn't change the error then the feature wasn't important. If shuffling a feature makes the error spike then the feature is important for predictions.
+
+```{r fig-conformal-global-explain, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Permutation-based feature importances for the conformalised model.
+
+conformal_explainer <- 
+  explain_tidymodels(
+    model = conformalised_regressor,
+    data = data_train |> select(-mpg), 
+    y = data_train |>  pull(mpg),
+    label = "conformal"
+  )
+
+p <- feature_importance(
+  conformal_explainer,
+  type = "variable_importance",
+  n_sample = 1000
+) |>
+  plot()
+ 
+ggplotly(p)
+```
+
+The top 4 most important features are: 
+
+- disp (Displacement): Engine displacement in cubic inches.
+- hp (Horsepower): Engine power in brake horsepower (bhp).
+- cyl (Cylinders): Number of cylinders in the engine.
+- wt (Weight): Weight of the car in 1000 lbs.
+
+## Partial Dependence
+
+We can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features.
+
+```{r fig-conformal-pdp, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Partial dependence plots for the conformalised model.
+
+p <- model_profile(
+  conformal_explainer,
+  type = "partial"
+) |>
+  plot() 
+
+ggplotly(p)
+```
+
+We see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 7 cylinders.
+
+## Residuals
+
+We will next produce a residuals plot to determine how well the model predicted Miles per Gallon at different values.
+
+```{r fig-conformal-residuals, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Residual plot for the conformalised model.
+
+p <- model_diagnostics(
+  conformal_explainer
+) |>
+  plot(variable = "y_hat", yvariable = "residuals")
+
+ggplotly(p)
+```
+
+We see an S-shaped curve, suggesting that there is bias in the predictions. There is evidence of over-prediction for Miles per Gallon below 12.5 and between 20 and 29. Conversely, there is evidence of under-prediction for Miles per Gallon over 29 and between 12.5 and 20.
+
+# Model versioning, sharing, and deployment
+
+Finally, we will demonstrate how to perform model versioning, sharing, deployment using a combination of:
+
+- [pins: For sharing and versioning resources and artifacts](https://pins.rstudio.com/)
+- [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
+- [plumber: For creating light-weight web apps, and deploying models as microservices](https://www.rplumber.io/)
+
+In this example, we will first save our conformalised model to a local temporary directory using *pins* and *vetiver*
+
+```{r tidymodels-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+board <- board_temp()
+v_model <- vetiver_model(conformalised_regressor, "conformal_ensemble")
+vetiver_pin_write(v_model, board = board)
+```
+
+We will next load and interact with the saved model using a plumber web application.
+
+```{r tidymodels-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+loaded_v <- board |> 
+  vetiver_pin_read("conformal_ensemble")
+
+pr(here("app", "api", "plumber.R")) |>
+  vetiver_api(loaded_v) |>
+  pr_run(port = 8088)
+```
+
+# Model cards
+
+[A model card](https://doi.org/10.1145/3287560.3287596) is a standardised document that provides key information about a machine learning model. It is essentially a "spec sheet" for an AI model. It’s meant to help people understand what the model does, how it was trained, and its limitations. *vetiver* offers support for generating model cards from an RMD template file. Run the below code to view an example template (don't try and render the template). 
+
+```{r tidymodels-model-card, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+file.edit(here("pages", "tidymodels_workshop", "cards", "card.rmd"))
+```
+
+We have already rendered the model card as an HTML file. This HTML file can be saved and retrieved using *pins*:
+
+```{r tidymodels-card-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+board |> 
+  pin_upload(
+    here("pages", "tidymodels_workshop", "cards", "card.html"), 
+    "conformal_ensemble_card"
+  )
+```
+
+We will finally load and interact with the saved model using a plumber web application. This time, with a model card available.
+
+```{r tidymodels-vetiver-card-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+loaded_v <- board |> 
+  vetiver_pin_read("conformal_ensemble")
+
+pr(here("app", "api", "plumber.R")) |>
+  vetiver_api(loaded_v) |>
+  pr_run(port = 8088)
+```
+
+# Bonus: Pipelines with targets
+
+[The *targets* package](https://books.ropensci.org/targets/) is used to construct reproducible data/statistical science workflows in R. A workflow is composed of a sequence of steps which are executed after the other. Successfully executed steps are cached to obviate the need to re-run already completed code.
+
+[*targets* can be combined with *crew* to facilitate distributed and parallelised computing within different execution environments.](https://books.ropensci.org/targets/crew.html)
+
+```{r tidymodels-targets, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+
+tar_make(
+  script = here("pipelines", "_targets_tidymodels_deployment.R"),
+  use_crew = TRUE
+)
 ```

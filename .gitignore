@@ -47,3 +47,5 @@ rsconnect/
 
 /.quarto/
 /_site
+
+**/_targets

@@ -16,9 +16,9 @@ editor:
 
 ### Introduction
 
-Overview of pipeline development and model deployment using the tidymodels framework in R. Includes a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. Demonstrates containerisation of models using Docker for deployment onto Kubernetes.
+This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as *stacks*, *DALEX*, and *workflowsets*.
 
-This workshop will demonstrate how one may train and deploy a TidyModels machine learning model onto Kubernetes via vetiver.
+We include a light introduction to MLOps principles for model deployment using the *vetiver* and *plumber* R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.
 
 ### Helpful background knowledge
 

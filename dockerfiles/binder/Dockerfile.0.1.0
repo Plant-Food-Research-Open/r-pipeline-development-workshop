@@ -75,6 +75,12 @@ ENV R_LIBS=${HOME}/renv/library/R-4.4/x86_64-pc-linux-gnu \
 
 COPY --chown=${NB_USER}:${NB_USER} ./app .
 
+COPY --chown=${NB_USER}:${NB_USER} ./R /app/R
+
+COPY --chown=${NB_USER}:${NB_USER} ./pages /app/pages
+
+COPY --chown=${NB_USER}:${NB_USER} ./stan /app/stan
+
 COPY --from=r_builder --chown=${NB_USER}:${NB_USER} ${HOME} .
 
 COPY --from=python_builder --chown=${NB_USER}:${NB_USER} /opt/venv ${VIRTUAL_ENV} 

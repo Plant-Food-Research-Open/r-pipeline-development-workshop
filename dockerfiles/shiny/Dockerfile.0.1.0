@@ -69,6 +69,12 @@ ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
 
 COPY --chown=shiny:shiny ./app .
 
+COPY --chown=shiny:shiny ./R /app/R
+
+COPY --chown=shiny:shiny ./pages /app/pages
+
+COPY --chown=shiny:shiny ./stan /app/stan
+
 COPY --from=r_builder --chown=shiny:shiny /app .
 
 COPY --from=python_builder --chown=shiny:shiny ${VIRTUAL_ENV} ${VIRTUAL_ENV}

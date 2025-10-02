@@ -1,0 +1,25 @@
+---
+title: "Coordinators"
+authors: "James Bristow, Jingjing Zhang, Hana Liang, Lindy Guo, Tom Moore"
+---
+
+# James Bristow
+
+James is a data scientist who specialises in Bayesian inference, machine learning, and semi-mechanistic modelling. He currently works part-time at PFR, primarily working with the crop modelling team using simulation platforms such as Agricultural Production Systems sIMulator (APSIM) and Growth Grammar-related Interactive Modelling Platform (GroIMP). James is also completing a PhD in statistical epidemiology at Massey University, focusing on the application of spatiotemporal modelling to Salmonella case counts within New Zealand, alongside animal influenza sequence data as part of an international collaboration with Cornell University. He completed his Master's degree on Bayesian age and growth modelling of chondrichthyans with National Institute of Water and Atmospheric research (NIWA) as supported by a Fisheries New Zealand scholarship.
+
+# Jingjing Zhang
+
+Jingjing is a data scientist and a quantitative ecologist specialising in using both statistical and simulation modelling tools to study the patterns of time-series and/or spatial data in ecology. Prior to joining PFR, Jingjing worked as a lecturer at the Auckland University of Technology. She completed Ph.D. at the University of Auckland, and afterwards worked as a quantitative Postdoc Research Fellow within NIWA. Her research interests are quantitative ecological modelling, the development of virtual ecology and its software tools. 
+
+# Hana Liang
+
+Hana is a data scientist based in Auckland. Since joining PFR, she has been working on various projects, focusing on sensor data ingestion and visualisation, model calibration, workflow orchestration, and pipeline implementation and deployment. She is also involved in computer vision projects, including deep learning–based image analysis. Hana has a bachelor's degree from the University of Auckland majoring in Data Science and is currently studying a Master's in Data Science part-time.
+
+# Lindy Guo
+
+Lindy is a statistical scientist at PFR, bringing expertise in statistical analysis to the organization. Her background reflects a strong focus on statistical analysis and research, with experience in applying statistical methodologies to research initiatives. In their role as statistician, Lindy contributes to research activities, applying principles of biometrical analysis and experimental design. They are involved in data interpretation and statistical modeling to support research objectives. Prior to this, Lindy served as a statistician at AgResearch, where they focused on data analysis and statistical inference. Their work history includes a Teaching Assistant position at The University of Auckland. Lindy's expertise is supported by a Master of Statistics degree from Auckland University, demonstrating applied statistical knowledge.
+
+# Tom Moore
+
+Tom is a quantitative ecologist specialising in integrating scientific hypotheses into statistical models to address causal questions. During his PhD in freshwater ecology, he focused on examining the potential threats posed by non-native species to Kakāhi (mussels) using Bayesian inference techniques and structural causal models. In addition to expertise in ecological research, Tom has a strong background in applied statistics. He is particularly interested in the areas of nitrogen pollution, entomology, and invasive species, where he uses data spanning across time and space. One of his ongoing research projects involves investigating the impact of biocontrol methods on managing Queensland fruit fly populations in Australia, which can be used as a case study to introduce causal inference to ecologists.
+

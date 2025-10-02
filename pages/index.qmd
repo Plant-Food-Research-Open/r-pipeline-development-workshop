@@ -11,7 +11,9 @@ authors: "James Bristow, Jingjing Zhang, Hana Liang, Lindy Guo, Tom Moore"
 
 ### Introduction
 
-Overview of pipeline development and model deployment using the tidymodels framework in R. Includes a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. Demonstrates containerisation of models using Docker for deployment onto Kubernetes.
+This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as *stacks*, *DALEX*, and *workflowsets*.
+
+We include a light introduction to MLOps principles for model deployment using the *vetiver* and *plumber* R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.
 
 ### Helpful background knowledge
 
@@ -28,7 +30,9 @@ Some familiarity with R. Statistical/machine learning concepts such as cross-val
 
 ### Introduction
 
-Overview of Bayesian modelling and causal inference using brms and cmdstanr. Includes a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. Demonstrates containerisation of models using Docker for deployment onto Kubernetes.
+This workshop provides an overview of Bayesian modelling and causal inference using *brms* and *cmdstanr*. 
+
+We include a light introduction to MLOps principles for model deployment using the *vetiver* and *plumber* R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.
 
 ### Helpful background knowledge
 

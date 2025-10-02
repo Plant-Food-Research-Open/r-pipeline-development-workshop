@@ -69,6 +69,12 @@ ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
 
 COPY --chown=rstudio:rstudio ./app .
 
+COPY --chown=rstudio:rstudio ./R /app/R
+
+COPY --chown=rstudio:rstudio ./pages /app/pages
+
+COPY --chown=rstudio:rstudio ./stan /app/stan
+
 COPY --from=r_builder --chown=rstudio:rstudio /app .
 
 COPY --from=python_builder --chown=rstudio:rstudio ${VIRTUAL_ENV} ${VIRTUAL_ENV}

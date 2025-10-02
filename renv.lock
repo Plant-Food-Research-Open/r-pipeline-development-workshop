@@ -396,6 +396,17 @@
       ],
       "Hash": "c1ee497a6d999947c2c224ae46799b1a"
     },
+    "box": {
+      "Package": "box",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "tools"
+      ],
+      "Hash": "d94049c1d9446b0abb413fde9e82a505"
+    },
     "brms": {
       "Package": "brms",
       "Version": "2.22.0",
@@ -3595,6 +3606,29 @@
         "utils"
       ],
       "Hash": "6298953be4b60e23b75cf48c9bf9b0a2"
+    },
+    "rmarkdown": {
+      "Package": "rmarkdown",
+      "Version": "2.30",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "bslib",
+        "evaluate",
+        "fontawesome",
+        "htmltools",
+        "jquerylib",
+        "jsonlite",
+        "knitr",
+        "methods",
+        "tinytex",
+        "tools",
+        "utils",
+        "xfun",
+        "yaml"
+      ],
+      "Hash": "efe19db0fde0fff13cea7eec6f695021"
     },
     "zeallot": {
       "Package": "zeallot",
