@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="dcterms.date" content="2025-10-03">
 
-<title>index – R Pipeline Development Workshop</title>
+<title>Stan Workshop – R Pipeline Development Workshop</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,8 +31,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../">
-<link href="../../CODE_OF_CONDUCT.html" rel="next">
-<link href="../../pages/stan_workshop/4_mlops_vetiver.html" rel="prev">
+<link href="../../pages/stan_workshop/2_causal_inference.html" rel="next">
+<link href="../../pages/tidymodels_workshop/4_mlops_vetiver.html" rel="prev">
 <script src="../../site_libs/quarto-html/quarto.js"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -82,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="../../styles.css">
-<meta property="og:title" content="R Pipeline Development Workshop">
+<meta property="og:title" content="Stan Workshop – R Pipeline Development Workshop">
 <meta property="og:site_name" content="R Pipeline Development Workshop">
-<meta name="twitter:title" content="R Pipeline Development Workshop">
+<meta name="twitter:title" content="Stan Workshop – R Pipeline Development Workshop">
 <meta name="twitter:card" content="summary">
 </head>
 
@@ -97,7 +98,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../pages/announcements/index.html">Communications and Community</a></li><li class="breadcrumb-item"><a href="../../pages/announcements/index.html">Announcements</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../pages/stan_workshop/1_intro.html">Stan</a></li><li class="breadcrumb-item"><a href="../../pages/stan_workshop/1_intro.html">Stan Workshop</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -188,7 +189,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../pages/stan_workshop/1_intro.html" class="sidebar-item-text sidebar-link">
+  <a href="../../pages/stan_workshop/1_intro.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Stan Workshop</span></a>
   </div>
 </li>
@@ -223,7 +224,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../pages/announcements/index.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../pages/announcements/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Announcements</span></a>
   </div>
 </li>
@@ -251,35 +252,68 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#announcements" id="toc-announcements" class="nav-link active" data-scroll-target="#announcements">Announcements</a>
+  <li><a href="#causal-inference-with-stan" id="toc-causal-inference-with-stan" class="nav-link active" data-scroll-target="#causal-inference-with-stan">Causal Inference with Stan</a>
   <ul class="collapse">
-  <li><a href="#r-pipeline-development-workshop-20251008" id="toc-r-pipeline-development-workshop-20251008" class="nav-link" data-scroll-target="#r-pipeline-development-workshop-20251008">R Pipeline Development Workshop [2025/10/08]</a>
-  <ul class="collapse">
-  <li><a href="#information" id="toc-information" class="nav-link" data-scroll-target="#information">Information</a></li>
-  </ul></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#helpful-background-knowledge" id="toc-helpful-background-knowledge" class="nav-link" data-scroll-target="#helpful-background-knowledge">Helpful background knowledge</a></li>
+  <li><a href="#coordinators" id="toc-coordinators" class="nav-link" data-scroll-target="#coordinators">Coordinators</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../pages/announcements/index.html">Communications and Community</a></li><li class="breadcrumb-item"><a href="../../pages/announcements/index.html">Announcements</a></li></ol></nav></header>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../pages/stan_workshop/1_intro.html">Stan</a></li><li class="breadcrumb-item"><a href="../../pages/stan_workshop/1_intro.html">Stan Workshop</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Stan Workshop</h1>
+</div>
 
 
 
+<div class="quarto-title-meta">
 
-<section id="announcements" class="level1">
-<h1>Announcements</h1>
-<section id="r-pipeline-development-workshop-20251008" class="level2">
-<h2 class="anchored" data-anchor-id="r-pipeline-development-workshop-20251008">R Pipeline Development Workshop [2025/10/08]</h2>
-<section id="information" class="level3">
-<h3 class="anchored" data-anchor-id="information">Information</h3>
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Tom Moore, James Bristow </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 3, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="causal-inference-with-stan" class="level2">
+<h2 class="anchored" data-anchor-id="causal-inference-with-stan">Causal Inference with Stan</h2>
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
+<p>This workshop provides an overview of Bayesian modelling and causal inference using <em>brms</em> and <em>cmdstanr</em>.</p>
+<p>We include a light introduction to MLOps principles for model deployment using the <em>vetiver</em> and <em>plumber</em> R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.</p>
+</section>
+<section id="helpful-background-knowledge" class="level3">
+<h3 class="anchored" data-anchor-id="helpful-background-knowledge">Helpful background knowledge</h3>
+<p>Some familiarity with R. Statistical concepts such as priors, posteriors, and Bayes’ rule.</p>
+</section>
+<section id="coordinators" class="level3">
+<h3 class="anchored" data-anchor-id="coordinators">Coordinators</h3>
 <ul>
-<li>Week for Plant &amp; Food Research data science carpentries workshop.</li>
-<li>Sessions for tidymodels and Stan R pipeline workshops.</li>
+<li>Tom Moore (Tom.Moore@plantandfood.co.nz)</li>
+<li>James Bristow (James.Bristow@plantandfood.co.nz)</li>
 </ul>
 
 
-</section>
 </section>
 </section>
 
@@ -703,13 +737,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../../pages/stan_workshop/4_mlops_vetiver.html" class="pagination-link" aria-label="MLOps using vetiver">
+      <a href="../../pages/tidymodels_workshop/4_mlops_vetiver.html" class="pagination-link" aria-label="MLOps using vetiver">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">MLOps using vetiver</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../../CODE_OF_CONDUCT.html" class="pagination-link" aria-label="Contributor Covenant Code of Conduct">
-        <span class="nav-page-text">Contributor Covenant Code of Conduct</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../../pages/stan_workshop/2_causal_inference.html" class="pagination-link" aria-label="Causal Inference">
+        <span class="nav-page-text">Causal Inference</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

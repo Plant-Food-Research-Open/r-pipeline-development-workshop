@@ -1,0 +1,18 @@
+---
+title: "Generalised Linear Madness"
+date: today
+authors: "Tom Moore, James Bristow"
+fig-pos: 'H'
+toc: true
+lof: true
+lot: true
+link-citations: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction
+
+In this section, we will cover generalised linear madness.
+

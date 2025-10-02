@@ -1,0 +1,17 @@
+---
+title: "Causal Inference"
+date: today
+authors: "Tom Moore, James Bristow"
+fig-pos: 'H'
+toc: true
+lof: true
+lot: true
+link-citations: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction
+
+In this section, we will cover causal inference.

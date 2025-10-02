@@ -1,0 +1,30 @@
+---
+title: "Stan Workshop"
+date: today
+authors: "Tom Moore, James Bristow"
+fig-pos: 'H'
+toc: true
+lof: true
+lot: true
+link-citations: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+## Causal Inference with Stan
+
+### Introduction
+
+This workshop provides an overview of Bayesian modelling and causal inference using *brms* and *cmdstanr*. 
+
+We include a light introduction to MLOps principles for model deployment using the *vetiver* and *plumber* R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.
+
+### Helpful background knowledge
+
+Some familiarity with R. Statistical concepts such as priors, posteriors, and Bayes' rule.
+
+### Coordinators
+
+- Tom Moore (Tom.Moore@plantandfood.co.nz)
+- James Bristow (James.Bristow@plantandfood.co.nz)

@@ -1,0 +1,22 @@
+---
+title: "MLOps using vetiver"
+date: today
+authors: "James Bristow, Tom Moore"
+fig-pos: 'H'
+toc: true
+lof: true
+lot: true
+link-citations: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction
+
+In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes*. As a reminder:
+
+- [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
+- [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
+
+We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
