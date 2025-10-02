@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: r-pipelines-models
+  namespace: sandbox
+  annotations:
+    cert-manager.io/cluster-issuer: k8s-tls-issuer
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "500"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "500"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "500"
+    nginx.ingress.kubernetes.io/keep-alive-timeout: "500"
+    nginx.ingress.kubernetes.io/proxy-body-size: 200M
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: random-forest.model.r-pipelines.k8s.dev.pfr.co.nz
+      http:
+        paths:
+          - backend:
+              service:
+                name: r-pipelines-models
+                port:
+                  name: port-8089
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - "random-forest.model.r-pipelines.k8s.dev.pfr.co.nz"
+      secretName: r-pipelines-models-tls-secret

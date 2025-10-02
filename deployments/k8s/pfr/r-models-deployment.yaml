@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: r-pipelines-models
+  namespace: sandbox
+  labels:
+    app: r-pipelines
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: r-pipelines
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: r-pipelines
+    spec:
+      containers:
+        - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
+          imagePullPolicy: Always
+          name: random-forest
+          ports:
+            - containerPort: 8089
+              protocol: TCP
+          args:
+            - Rscript
+            - api/vetiver_deploy.R
+          env:
+            - name: S3_BUCKET
+              value: data
+            - name: AWS_ACCESS_KEY_ID
+              value: user
+            - name: AWS_SECRET_ACCESS_KEY
+              value: password
+            - name: S3_ENDPOINT_URL
+              value: https://minio-api.r-pipelines.k8s.dev.pfr.co.nz
+            - name: MODEL_NAME
+              value: random_forest
+            - name: MODEL_PORT
+              value: "8089"
+            - name: MODEL_CARD_NAME
+              value: random_forest_card
+      restartPolicy: Always

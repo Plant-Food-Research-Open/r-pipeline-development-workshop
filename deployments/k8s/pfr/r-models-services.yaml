@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: r-pipelines-models
+  namespace: sandbox
+  labels:
+    app: r-pipelines
+spec:
+  selector:
+    app: r-pipelines
+  type: LoadBalancer
+  ports:
+    - name: port-8089
+      protocol: TCP
+      port: 8089
+      targetPort: 8089
