@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-for-r-pipelines
+  namespace: sandbox
+  labels:
+    app: r-pipelines
+spec:
+  template:
+    metadata:
+      labels:
+        app: r-pipelines
+    spec:
+      initContainers:
+        - name: wait-for-minio
+          image: minio/mc:RELEASE.2023-05-30T22-41-38Z
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - >
+              set -x;
+              while [[ "$(curl -o /dev/null -I -L -s -w "%{http_code}" http://r-pipelines:9000/minio/health/live)" -ne "200" ]]; do
+                sleep 20;
+              done;
+              /usr/bin/mc config host add s3 http://r-pipelines:9000 user password --api S3v4;
+              [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/mlflow;  /usr/bin/mc policy download s3/mlflow;
+              [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/data;  /usr/bin/mc policy download s3/data; exit 0;
+      containers:
+        - name: empty
+          image: alpine
+          command: ["pwd"]
+      restartPolicy: Never
+  backoffLimit: 3
