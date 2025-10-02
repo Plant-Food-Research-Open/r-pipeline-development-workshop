@@ -35,7 +35,7 @@ spec:
             - name: AWS_SECRET_ACCESS_KEY
               value: password
             - name: S3_ENDPOINT_URL
-              value: https://minio-api.r-pipelines.k8s.dev.pfr.co.nz
+              value: http://r-pipelines:9000
             - name: MODEL_NAME
               value: random_forest
             - name: MODEL_PORT
