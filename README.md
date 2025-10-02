@@ -18,6 +18,7 @@ Website: [R Pipeline Development Workshop](https://plant-food-research-open.gith
   - [Coordinators](#coordinators)
 - [Stan](#stan)
   - [Coordinators](#coordinators-1)
+- [Workshop](#workshop)
 - [Communication](#communication)
 - [Announcements](#announcements)
 - [Contributions and Support](#contributions-and-support)
@@ -38,6 +39,12 @@ Website: [R Pipeline Development Workshop](https://plant-food-research-open.gith
 
 * Tom Moore (Tom.Moore@plantandfood.co.nz)
 * James Bristow (James.Bristow@plantandfood.co.nz)
+
+# Workshop
+
+Workshop material for R pipeline development may be found in the [pages directory.](pages)
+
+[Click this link to launch the workshop material within Binder, which is recommended for users who do not wish to configure the workshop environment locally.](https://mybinder.org/v2/gh/Plant-Food-Research-Open/r-pipeline-development-workshop.git/HEAD)
 
 # Communication
 
