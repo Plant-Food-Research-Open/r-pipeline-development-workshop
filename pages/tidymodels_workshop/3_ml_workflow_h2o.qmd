@@ -1,0 +1,228 @@
+---
+title: "Machine Learning Workflow using H2O"
+date: today
+authors: "James Bristow, Jingjing Zhang, Hana Liang, Lindy Guo"
+fig-pos: 'H'
+toc: true
+lof: true
+lot: true
+link-citations: true
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction
+
+In this section, we will demonstrate how one may train a machine learning model and tune its hyper-parameters using the *tidymodels* framework. [For more information, click this link.](https://www.tidymodels.org/)  
+
+[We will combine *tidymodels* with H2O.](https://h2o.ai/) H2O is an open-source, distributed machine learning platform designed for scalable and fast data analysis. It’s widely used for building predictive models on large datasets and supports both traditional machine learning algorithms and modern AI methods.
+
+We first load all required dependencies.
+
+```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+box::use(../../R/proj_utils)
+box::use(../../R/tidymodels_deployment)
+
+box::use(
+  dials[svm_margin, trees, penalty, mixture],
+  readr[read_csv, read_file],
+  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],
+  here[here],
+  dplyr[mutate, bind_rows, arrange, filter, select, pull], 
+  purrr[pluck],
+  ranger[ranger],
+  kernlab,
+  rsample[initial_split, vfold_cv, training, testing],
+  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg, auto_ml],
+  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],
+  yardstick[rmse, mae, metric_set, metrics],
+  hardhat[tune],
+  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon, geom_boxplot, scale_x_sqrt],
+  workflows[workflow, add_recipe, add_model, fit],
+  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],
+  stacks[stacks, add_candidates, blend_predictions, fit_members],
+  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],
+  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],
+  paws.common,
+  paws.storage,
+  plotly[ggplotly],
+  probably[int_conformal_split, cal_plot_regression],
+  plumber[pr, pr_run],
+  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],
+  DALEXtra[explain_tidymodels],
+  glmnet,
+  zeallot[...],
+  targets[tar_make],
+  h2o[h2o.connect, h2o.init],
+  agua[extract_fit_parsnip, rank_results, member_weights],
+  tidyr[unnest]
+)
+
+source(here("R/probably_vetiver.R"))
+```
+
+# Data
+
+We will next load an example dataset. [For this tutorial, we will use the mtcars dataset.](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html)
+
+```{r load-h2o-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+data("mtcars")
+head(mtcars)
+```
+
+We will next perform a 80-20 train-test data split. We will train our model on 80% of the data, and assess it against the other 20%.
+
+```{r split-h2o-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+data_split <- mtcars |>
+  initial_split(
+    prop = 0.8
+  )
+
+data_train <- training(data_split)
+data_test  <- testing(data_split)
+
+head(data_train)
+```
+
+Next, we will create a data preprocessing recipe using the [recipes package](https://recipes.tidymodels.org/). This recipe will:
+
+- Drop zero and near zero-variance columns.
+- Normalise all numeric columns using Z-standardisation.
+- Impute missing data using k nearest neighbor imputation.
+
+```{r process-h2o-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+training_recipe <- recipe(data_train) |>
+  update_role(everything(), new_role = "predictor") |>
+  update_role(mpg, new_role = "outcome") |>
+  step_zv() |>
+  step_nzv() |>
+  step_normalize(all_numeric(), -all_outcomes()) |>
+  step_impute_knn()
+```
+
+# AutoML
+
+Rather than using *workflowsets* and various R-based models, we will instead launch an H2O server and execute its supported AutoML algorithm. We will only run this algorithm for a maximum of 20 seconds for demonstration purposes. You would typically want to run it for longer depending on the nature of the dataset.
+
+```{r h2o-automl, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+h2o.init(max_mem_size = "512M", nthreads = 1)
+
+auto_spec <-
+  auto_ml() |>
+  set_engine("h2o", max_runtime_secs = 20, seed = 1) |>
+  set_mode("regression")
+
+auto_wflow <-
+  workflow() |>
+  add_model(auto_spec) |>
+  add_recipe(training_recipe)
+
+auto_fit <- fit(auto_wflow, data = data_train)
+extract_fit_parsnip(auto_fit)
+```
+
+## Results
+
+We next view the evaluation results of the AutoML algorithm, sorting by predictive accuracy using the mean absolute error (MAE) metric.
+
+```{r h2o-automl-results, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+rank_results(auto_fit) |>
+  filter(.metric == "mae") |>
+  arrange(rank)
+```
+
+The generalised linear models (GLMs) and gradient boosting machine (GBM) algorithms show promising results. We can next visualise the stacking ensemble member weights from H2O's AutoML algorithm. 
+
+```{r fig-h2o-importances, results = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: H20 AutoML model importances.
+
+p <- auto_fit |>
+  extract_fit_parsnip() |>
+  member_weights() |>
+  unnest(importance) |>
+  filter(type == "scaled_importance") |>
+  ggplot() +
+  geom_boxplot(aes(value, algorithm)) +
+  scale_x_sqrt() +
+  labs(y = NULL, x = "scaled importance", title = "Member importance in AutoML model")
+
+ggplotly(p)
+```
+
+This plot shows that the GLM and GBM models are more heavily weighted in the ensemble than the other supported algorithms.
+
+# Uncertainty Quantification
+
+Our AutoML model does not produce prediction intervals out-of-the-box. Hence, no in-built uncertainty quantification. We will use *probably* to conformalise the model to produce non-parametric prediction intervals using conformal inference.
+
+```{r h2o-conformalisation, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+patched_stack_regressor <- tidymodels_deployment$patch_tidymodel(auto_fit, training_recipe, data_train)
+conformalised_regressor <- int_conformal_split(patched_stack_regressor, data_train)
+conformalised_regressor$training <- data_train
+```
+
+We can view the predictions produced by the conformalised model, this time with prediction intervals included:
+
+```{r h2o-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised model (95% prediction intervals).
+
+p <- conformalised_regressor |> 
+  predict(new_data = data_test, level = 0.95) |>
+  mutate(
+    mpg = data_test$mpg,
+    wt = data_test$wt
+  ) |>
+  ggplot(aes(x = wt, y = mpg, color = "Observed MPG")) +
+  geom_point() +
+  geom_point(aes(x = wt, y = .pred, color = "Predicted MPG")) +
+  geom_ribbon(
+    aes(ymin = .pred_lower, ymax = .pred_upper, colour = "Predicted MPG"),
+    alpha = 0.2
+  ) +
+  labs(x = "Weight", y = "Miles per Gallon (MPG)", color = "Variable") +
+  theme_minimal() 
+
+ggplotly(p)
+```
+
+Most of the testing observations fall within the 95% prediction
+intervals. Given a large enough testing dataset, we would expect roughly
+5% of new observations to fall outside of the intervals.
+
+# Model versioning, sharing, and deployment
+
+Finally, we will demonstrate how to perform model versioning, sharing,
+deployment using a combination of *pins*, *vetiver*, and *plumber*. In this example, we will first save our AutoML model to a local temporary directory using *pins* and *vetiver*
+
+```{r h2o-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+board <- board_temp()
+v_model <- vetiver_model(conformalised_regressor, "automl_model")
+vetiver_pin_write(v_model, board = board)
+```
+
+We will next load and interact with the saved model using a plumber web application.
+
+```{r h2o-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+loaded_v <- board |> 
+  vetiver_pin_read("automl_model")
+
+pr(here("app", "api", "plumber.R")) |>
+  vetiver_api(loaded_v) |>
+  pr_run(port = 8088)
+```
+
+# Bonus: Pipelines with targets
+
+[The *targets* package](https://books.ropensci.org/targets/) is used to
+construct reproducible data/statistical science workflows in R. 
+
+```{r h2o-targets, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+
+tar_make(
+  script = here("pipelines", "_targets_h2o_deployment.R"),
+  use_crew = TRUE
+)
+```

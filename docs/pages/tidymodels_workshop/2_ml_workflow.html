@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../">
-<link href="../../pages/stan_workshop/doc.html" rel="next">
+<link href="../../pages/tidymodels_workshop/3_ml_workflow_h2o.html" rel="next">
 <link href="../../pages/tidymodels_workshop/1_intro.html" rel="prev">
 <script src="../../site_libs/quarto-html/quarto.js"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
@@ -212,6 +212,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Machine Learning Workflow</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../pages/tidymodels_workshop/3_ml_workflow_h2o.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning Workflow using H2O</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -339,7 +345,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  readr[read_csv, read_file],</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  here[here],</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  dplyr[mutate, bind_rows, arrange],</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  dplyr[mutate, bind_rows, arrange, select, pull],</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  purrr[pluck],</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  ranger[ranger],</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  kernlab,</span>
@@ -788,7 +794,7 @@ Figure&nbsp;4: Residual plot for the conformalised model.
 <ul>
 <li><a href="https://pins.rstudio.com/">pins: For sharing and versioning resources and artifacts</a></li>
 <li><a href="https://rstudio.github.io/vetiver-r/">vetiver: For model versioning, sharing, and deployment</a></li>
-<li><a href="https://www.rplumber.io/">plumber: For creating light-weight web apps, and deploying models as microservices</a></li>
+<li><a href="https://www.rplumber.io/">plumber: For creating light-weight web applications, and deploying models as microservices</a></li>
 </ul>
 <p>In this example, we will first save our conformalised model to a local temporary directory using <em>pins</em> and <em>vetiver</em></p>
 <div class="cell">
@@ -830,12 +836,14 @@ Create a Model Card for your published model
 </div>
 <p>We will finally load and interact with the saved model using a plumber web application. This time, with a model card available.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>loaded_v <span class="ot">&lt;-</span> board <span class="sc">|&gt;</span> </span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_pin_read</span>(<span class="st">"conformal_ensemble"</span>)</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pr</span>(<span class="fu">here</span>(<span class="st">"app"</span>, <span class="st">"api"</span>, <span class="st">"plumber.R"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_api</span>(loaded_v) <span class="sc">|&gt;</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pr_run</span>(<span class="at">port =</span> <span class="dv">8088</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="st">"MODEL_CARD_NAME"</span> <span class="ot">=</span> <span class="st">"conformal_ensemble_card"</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>loaded_v <span class="ot">&lt;-</span> board <span class="sc">|&gt;</span> </span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_pin_read</span>(<span class="st">"conformal_ensemble"</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="fu">pr</span>(<span class="fu">here</span>(<span class="st">"app"</span>, <span class="st">"api"</span>, <span class="st">"plumber.R"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_api</span>(loaded_v) <span class="sc">|&gt;</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pr_run</span>(<span class="at">port =</span> <span class="dv">8088</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="bonus-pipelines-with-targets" class="level1">
@@ -1277,8 +1285,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../../pages/stan_workshop/doc.html" class="pagination-link" aria-label="Stan Workflow">
-        <span class="nav-page-text">Stan Workflow</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../../pages/tidymodels_workshop/3_ml_workflow_h2o.html" class="pagination-link" aria-label="Machine Learning Workflow using H2O">
+        <span class="nav-page-text">Machine Learning Workflow using H2O</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

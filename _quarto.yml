@@ -33,6 +33,7 @@ website:
         contents:
         - pages/tidymodels_workshop/1_intro.qmd
         - pages/tidymodels_workshop/2_ml_workflow.qmd
+        - pages/tidymodels_workshop/3_ml_workflow_h2o.qmd
       - section: "Stan"
         contents:
         - pages/stan_workshop/doc.qmd
