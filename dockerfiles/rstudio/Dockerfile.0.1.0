@@ -25,7 +25,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends openjdk-17-jdk pandoc libsodium-dev graphviz \
     libglpk-dev cmake libnng-dev libmbedtls-dev openssh-client liblzma-dev libpq-dev libcurl4-openssl-dev \
     libbz2-dev software-properties-common build-essential libmagic-dev libmagick++-dev curl g++ make \
-    libharfbuzz-dev libfribidi-dev \
+    libharfbuzz-dev libfribidi-dev graphviz-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/downloaded_packages \
@@ -74,6 +74,8 @@ COPY --chown=rstudio:rstudio ./R /app/R
 COPY --chown=rstudio:rstudio ./pages /app/pages
 
 COPY --chown=rstudio:rstudio ./stan /app/stan
+
+COPY --chown=rstudio:rstudio r-pipeline-development.Rproj .
 
 COPY --from=r_builder --chown=rstudio:rstudio /app .
 

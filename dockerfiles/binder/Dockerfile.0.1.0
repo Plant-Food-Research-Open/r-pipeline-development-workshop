@@ -31,7 +31,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends openjdk-17-jdk pandoc libsodium-dev graphviz \
     libglpk-dev cmake libnng-dev libmbedtls-dev openssh-client liblzma-dev libpq-dev libcurl4-openssl-dev \
     libbz2-dev software-properties-common build-essential libmagic-dev libmagick++-dev curl g++ make \
-    libharfbuzz-dev libfribidi-dev \
+    libharfbuzz-dev libfribidi-dev graphviz-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/downloaded_packages \
@@ -75,11 +75,13 @@ ENV R_LIBS=${HOME}/renv/library/R-4.4/x86_64-pc-linux-gnu \
 
 COPY --chown=${NB_USER}:${NB_USER} ./app .
 
-COPY --chown=${NB_USER}:${NB_USER} ./R /app/R
+COPY --chown=${NB_USER}:${NB_USER} ./R ${HOME}/R
 
-COPY --chown=${NB_USER}:${NB_USER} ./pages /app/pages
+COPY --chown=${NB_USER}:${NB_USER} ./pages ${HOME}/pages
 
-COPY --chown=${NB_USER}:${NB_USER} ./stan /app/stan
+COPY --chown=${NB_USER}:${NB_USER} ./stan ${HOME}/stan
+
+COPY --chown=rstudio:rstudio r-pipeline-development.Rproj .
 
 COPY --from=r_builder --chown=${NB_USER}:${NB_USER} ${HOME} .
 
