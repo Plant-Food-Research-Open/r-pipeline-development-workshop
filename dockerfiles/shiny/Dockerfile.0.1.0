@@ -77,6 +77,8 @@ COPY --chown=shiny:shiny ./stan /app/stan
 
 COPY --chown=shiny:shiny r-pipeline-development.Rproj .
 
+COPY --chown=shiny:shiny .here .
+
 COPY --from=r_builder --chown=shiny:shiny /app .
 
 COPY --from=python_builder --chown=shiny:shiny ${VIRTUAL_ENV} ${VIRTUAL_ENV}

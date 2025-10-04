@@ -81,7 +81,9 @@ COPY --chown=${NB_USER}:${NB_USER} ./pages ${HOME}/pages
 
 COPY --chown=${NB_USER}:${NB_USER} ./stan ${HOME}/stan
 
-COPY --chown=rstudio:rstudio r-pipeline-development.Rproj .
+COPY --chown=${NB_USER}:${NB_USER} r-pipeline-development.Rproj .
+
+COPY --chown=${NB_USER}:${NB_USER} .here .
 
 COPY --from=r_builder --chown=${NB_USER}:${NB_USER} ${HOME} .
 

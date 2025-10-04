@@ -3874,7 +3874,7 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "0394c83d48095b6758b9a48b89eef364"
-    }
+    },
     "Rfast": {
       "Package": "Rfast",
       "Version": "2.1.5.1",
