@@ -75,6 +75,8 @@ COPY --chown=rstudio:rstudio ./pages /app/pages
 
 COPY --chown=rstudio:rstudio ./stan /app/stan
 
+COPY --chown=rstudio:rstudio ./pipelines /app/pipelines
+
 COPY --chown=rstudio:rstudio r-pipeline-development.Rproj .
 
 COPY --chown=rstudio:rstudio .here .
