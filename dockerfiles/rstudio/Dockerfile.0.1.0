@@ -67,7 +67,7 @@ ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
     VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
-COPY --chown=rstudio:rstudio ./app ./app
+COPY --chown=rstudio:rstudio ./app /app/app
 
 COPY --chown=rstudio:rstudio ./R /app/R
 
