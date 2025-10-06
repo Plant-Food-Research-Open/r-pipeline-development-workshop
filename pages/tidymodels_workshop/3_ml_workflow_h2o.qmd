@@ -267,6 +267,14 @@ pr(here("app", "api", "plumber.R")) |>
 [The *targets* package](https://books.ropensci.org/targets/) is used to
 construct reproducible data/statistical science workflows in R. 
 
+To view the targets pipeline code, run the following:
+
+```{r h2o-targets-pipeline, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+file.edit(here("pipelines", "_targets_h2o_deployment.R"))
+```
+
+Next, we can run the targets pipeline.
+
 ```{r h2o-targets, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 
 tar_make(
@@ -275,8 +283,4 @@ tar_make(
 )
 ```
 
-To view the targets pipeline code, run the following:
 
-```{r h2o-targets-pipeline, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
-file.edit(here("pipelines", "_targets_h2o_deployment.R"))
-```

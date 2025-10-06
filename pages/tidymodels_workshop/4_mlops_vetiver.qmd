@@ -14,7 +14,9 @@ editor:
 
 # Introduction
 
-In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes*. As a reminder:
+In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes* to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps—like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time
+
+As a reminder:
 
 - [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
 - [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
@@ -204,7 +206,7 @@ pr(here("app", "api", "plumber.R")) |>
 
 # Docker
 
-Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container. This ensures that the application runs consistently across different environments — whether on a developer's laptop, a testing server, or a production cloud environment. Docker helps developers "build once, run anywhere" without worrying about environment mismatches.
+[Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container](https://www.docker.com/). This ensures that the application runs consistently across different environments — whether on a developer's laptop, a testing server, or a production cloud environment. Docker helps developers "build once, run anywhere" without worrying about environment mismatches.
 
 Our objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:
 
@@ -216,7 +218,7 @@ Our objective is to package up our plumber web application and model within a Do
 
 # Kubernetes
 
-Kubernetes is an open-source platform that automates the deployment, scaling, and management of containerised applications, such as our deployed models.
+[Kubernetes is an open-source platform that automates the deployment, scaling, and management of containerised applications, such as our deployed models.](https://kubernetes.io/)
 
 It organizes containers into logical units called pods, schedules them across a cluster of machines, and handles networking, storage, and load balancing. This ensures that your applications run reliably even as demand changes or failures occur. Kubernetes also provides self-healing features, automatically restarting or rescheduling containers when they fail. 
 

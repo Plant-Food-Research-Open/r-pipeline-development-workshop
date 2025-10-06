@@ -16,7 +16,8 @@ tar_option_set(
 
 list(
   tar_target(
-    connection, h2o.init(max_mem_size = "512M", nthreads = 1, startH2O = TRUE)
+    connection, h2o.init(max_mem_size = "512M", nthreads = 1, startH2O = TRUE),
+    cue = tar_cue("always")
   ),
   tar_target(
     mtcars, read_csv("https://raw.githubusercontent.com/plotly/datasets/refs/heads/master/mtcars.csv") |>

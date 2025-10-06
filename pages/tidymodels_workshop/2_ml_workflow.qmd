@@ -16,10 +16,10 @@ editor:
 
 In this section, we will demonstrate how one may train a machine
 learning model and tune its hyper-parameters using the *tidymodels*
-framework, which is composed of several packages for machine learning
+framework, which is composed of several packages for implementing machine learning workflows
 using tidyverse principles. *tidymodels* offers a unified interface to
 performing data preprocessing, modelling using various machine learning
-algorithms, mode assessment and visualisation, and cross-Validation &
+algorithms, model evaluation and visualisation, and cross-Validation &
 tuning. [For more information, click this
 link.](https://www.tidymodels.org/)
 
@@ -28,25 +28,25 @@ We first load all required dependencies.
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
 box::use(../../R/proj_utils)
 box::use(../../R/tidymodels_deployment)
-
 box::use(
   dials[svm_margin, trees, penalty, mixture],
   readr[read_csv, read_file],
   tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],
   here[here],
-  dplyr[mutate, bind_rows, arrange, select, pull],
+  dplyr[mutate, bind_rows, arrange, select, pull, slice_head],
   purrr[pluck],
   ranger[ranger],
   kernlab,
   rsample[initial_split, vfold_cv, training, testing],
   parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],
-  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update],
+  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, step_rm, update, step_pca, prep, bake, all_numeric, all_outcomes, all_numeric_predictors],
   yardstick[rmse, mae, metric_set, metrics],
   hardhat[tune],
-  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],
+  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon, geom_col, coord_flip, facet_wrap],
   workflows[workflow, add_recipe, add_model],
-  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],
-  stacks[stacks, add_candidates, blend_predictions, fit_members],
+  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, workflow_autoplot = autoplot, rank_results],
+  tidyclust[k_means, tidy_clust = tidy],
+  stacks[stacks, add_candidates, blend_predictions, fit_members, stacks_autoplot = autoplot],
   vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],
   pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],
   paws.common,
@@ -70,16 +70,34 @@ We will next load an example dataset. [For this tutorial, we will use
 the mtcars
 dataset.](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html)
 
+The mtcars dataset is a classic dataset in R, extracted from the 1974 Motor Trend magazine. It contains data on fuel consumption and 10 aspects of automobile design and performance for 32 car models. 
+
+- mpg: Miles per gallon, a measure of fuel efficiency.  
+- cyl: Number of cylinders in the engine.  
+- disp: Engine displacement in cubic inches.  
+- hp: Gross horsepower of the car.  
+- drat: Rear axle ratio.  
+- wt: Weight of the car (in 1000 lbs).  
+- qsec: 1/4 mile time in seconds (acceleration measure).  
+- vs: Engine shape (0 = V-shaped, 1 = straight).  
+- am: Transmission type (0 = automatic, 1 = manual).  
+- gear: Number of forward gears.  
+- carb: Number of carburetors.
+
 ```{r load-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
 data("mtcars")
+mtcars <- mtcars |>
+  mutate(car = rownames(mtcars))
 head(mtcars)
 ```
 
-We will next perform a 80-20 train-test data split. We will train our
-model on 80% of the data, and assess it against the other 20%.
+We will next perform a train-test data split. The purpose of data splitting is to fairly evaluate how well a predictive model will perform on new, unseen data. We don’t want to just measure performance on the data used to train the model because the model might just memorise it (overfitting).
+
+We will use an 80-20 train-test data split. We will train our model on 80% of the data, and assess it against the other 20%.
 
 ```{r split-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+set.seed(200)
 data_split <- mtcars |>
   initial_split(
     prop = 0.8
@@ -100,7 +118,8 @@ sequences of feature preprocessing steps. This recipe will:
 -   Impute missing data using k nearest neighbor imputation.
 
 ```{r process-tidymodels-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
-training_recipe <- recipe(data_train) |>
+training_recipe <- data_train |>
+  recipe() |>
   update_role(everything(), new_role = "predictor") |>
   update_role(mpg, new_role = "outcome") |>
   step_zv() |>
@@ -109,11 +128,94 @@ training_recipe <- recipe(data_train) |>
   step_impute_knn()
 ```
 
+# Exploratory Data Analysis: Dimensionality Reduction and Clustering
+
+## Principal Component Analysis 
+
+We will demonstrate how one may perform dimensionality reduction and clustering, primarily for visualisation purposes, on the mtcars dataset using tidymodels. We can take the data preprocessing training recipe specified above and extend from it to include a principal component analysis (PCA) preprocessing step. [Click this link for more information on PCA.](https://www.nature.com/articles/s43586-022-00184-w)
+
+```{r tidymodels-pca-cluster, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Principal Component Analysis on mtcars
+pca_prep <- training_recipe |>
+  step_pca(all_numeric_predictors(), num_comp = 2) |>
+  prep()
+
+pca_results <- pca_prep |>
+  bake(new_data = data_train) |>
+  mutate(car = data_train$car)
+
+pca_explained <- proj_utils$pca_var_explained(pca_prep, 2, 5) |>
+  round(2) 
+  
+p <- pca_results |>
+  ggplot(aes(PC1, PC2, label = car)) +
+  geom_point(size = 1) +
+  theme_minimal() +
+  labs(x = paste0("PC1 (", pca_explained[1], " variance explained)"), y = paste0("PC2 (", pca_explained[2], " variance explained)"))
+  
+ggplotly(p)
+```
+
+This just tells us which vehicles are similar to one another by car make. We can view the loadings (coefficients per original variable) for our PCA results:
+
+```{r tidymodels-pca-cluster, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Principal Component Analysis loadings for mtcars
+
+ p <- pca_prep |>
+  tidy_clust(5) |>
+  filter(component %in% c("PC1", "PC2")) |>
+  group_by(component) |>
+  slice_max(abs(value), n = 5) |>
+  arrange(component, desc(abs(value))) |>
+  mutate(absval = abs(value)) |>
+  group_by(component) |>
+  slice_max(absval, n = 5) |>
+  ggplot(aes(x = reorder(terms, value), y = value, fill = component)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~component, scales = "free_y") +
+  theme_minimal() +
+  labs(x = "Variable", y = "Loading weight")
+
+ggplotly(p)
+```
+
+For the first principal component (PC1):
+
+- Displacement (disp), Cylinders (cyl), Weight (wt), and Horsepower (hp) all have positive loadings, meaning they increase together along PC1. Cars with high PC1 scores tend to be heavier, more powerful, and larger-engined.
+- Engine shape (vs) has a negative loading, meaning it moves opposite to PC1. Higher PC1 scores are associated with V-shaped engines (vs = 0), while straight engines (vs = 1) correspond to lower PC1 scores.
+
+PC1 primarily captures a "size and power vs engine type" gradient across the cars in the dataset.
+
+## K-Means Clustering 
+
+We will next perform K-means clustering on the first two principal components of the mtcars dataset to group cars based on overall patterns in size, power, and efficiency. By reducing the data with PCA, we captured the main variance in fewer dimensions, and K-means then identifies clusters of similar cars. [Click here to learn more about K-means clustering.](https://www.sciencedirect.com/science/article/abs/pii/S0020025522014633)
+
+```{r tidymodels-kmeans-clustering, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Principal Component Analysis on mtcars
+set.seed(100)
+kmeans_res <- pca_results |>
+  select(-car) |>
+  kmeans(centers = 3)
+  
+p <- pca_results |>
+  mutate(cluster = as.factor(kmeans_res$cluster)) |>
+  ggplot(aes(PC1, PC2, color = cluster, label = car)) +
+  geom_point(size = 1) +
+  theme_minimal() +
+  labs(x = paste0("PC1 (", pca_explained[1], " variance explained)"), y = paste0("PC2 (", pca_explained[2], " variance explained)"))
+  
+ggplotly(p)
+```
+
+The resulting plot shows possible groupings, with clusters reflecting differences in engine size, weight, and horsepower. Have a play around with different values of k and see how that influences the clustering results.
+
 # Cross Validation
 
-We will next set up k-fold cross validation using 5 folds. Our training
-set will be divided into 5 segments to assess its predictive performance
-and tune the hyper-parameters of the machine learning models.
+We will next set up k-fold cross validation using k=5 folds, the purpose of which is to reliably estimate a model's performance on unseen data while making the most of the available dataset. [More information on cross-validation can be found here.](https://pmc.ncbi.nlm.nih.gov/articles/PMC11412612/)
+
+Our training set will be divided into 5 segments to assess its predictive performance
+and tune the hyper-parameters of the machine learning models. We will train our model on 4 folds and assess it against the remaining validation fold. This process is repeated for each fold.
 
 ```{r tidymodels-cv, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 folds <- vfold_cv(
@@ -123,7 +225,9 @@ folds <- vfold_cv(
 
 For hyper-parameter optimisation, we will combine 5-fold cross
 validation with a grid search over different hyper-parameter
-combinations. We will aim to optimise the predictive accuracy of the
+combinations. [A comprehensive tutorial on grid-search may be found here.](https://www.tmwr.org/grid-search)
+
+We will aim to optimise the predictive accuracy of the
 machine learning models using the root mean square (RMSE) and mean
 absolute error (MAE) metrics.
 
@@ -142,9 +246,11 @@ ctrl_grid <- control_grid(
 # Workflow Set
 
 We will next use the [workflowsets
-package](https://workflowsets.tidymodels.org/) to easily manage,
+package](https://workflowsets.tidymodels.org/) to easily streamline, manage,
 combine, and compare several machine learning workflows for multiple
-models. We next construct a workflow set composed of:
+models. 
+
+We next construct 3 workflows composed of:
 
 -   Linear regression: We will use the *glmnet* package.
 -   Random forest: We will use the *ranger* package.
@@ -169,6 +275,17 @@ workflowset, while incorporating the RMSE and MAE evaluation metrics,
 5-fold cross-validation, and grid search hyper-parameter optimisation.
 
 ```{r tidymodels-workflowset, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+training_recipe <- data_train |>
+  recipe() |>
+  update_role(everything(), new_role = "predictor") |>
+  update_role(mpg, new_role = "outcome") |>
+  step_zv() |>
+  step_nzv() |>
+  step_normalize(all_numeric(), -all_outcomes()) |>
+  step_impute_knn() |>
+  step_rm(car)
+
 model_set <- workflow_set(
   preproc = list(
     standard = training_recipe
@@ -220,7 +337,7 @@ svm_params <- extract_parameter_set_dials(svm_recipe) |>
   )
 ```
 
-We next execute the grid search for hyper-parameter optimisation.
+We next execute the grid search for hyper-parameter tuning.
 
 ```{r tidymodels-hyperopt-grid-run, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
@@ -244,31 +361,45 @@ tuned_model_set <- model_set |>
     "tune_grid", 
     seed = 1000
   )
+
+tuned_model_set
 ```
+
+This produces a set of tuned machine learning models.
 
 ## Results
 
-We will next visualise the results for the hyper-parameter optimisation
+We can visualise the results for the hyper-parameter optimisation
 of our 5-fold cross-validation procedure. We can compare the predictive
 performance of our 3 machine learning models.
 
 ```{r tidymodels-hyperopt-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Hyper-parameter optimisation results via grid search for 5-fold cross validation.
-autoplot(tuned_model_set) |> 
+workflow_autoplot(tuned_model_set) |> 
   ggplotly()
 ```
 
-We can see that the random forest models appear to have the greatest
+We see that the random forest models appear to have the greatest
 predictive accuracy, with linear regression having the poorest, and
-support vector machine sitting in the middle. We finally retrieve the
-best fitted model, and evaluate it.
+support vector machine sitting in the middle. Let's view a table of metrics for the best models.
+
+```{r tidymodels-best-model-metrics, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+tuned_model_set |>
+  rank_results(rank_metric = "rmse") |>
+  filter(.metric == "rmse") |>
+  slice_head(n=5)
+```
+
+We finally retrieve the best fitted model, and evaluate it.
 
 ```{r tidymodels-best-model, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 best_model <- fit_best(tuned_model_set)
 best_model
 ```
 
-We can view the predictions of the best fitted model:
+
+
+Let's plot the predictions of the best fitted model:
 
 ```{r tidymodels-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set.
@@ -288,13 +419,13 @@ ggplotly(p)
 
 # Stacking ensemble
 
-Rather than selecting only a single random forest model, we may instead
+Rather than selecting only a single best model, we may instead
 construct an ensemble composed of all the tuned machine learning models.
 [We will make use of the *stacks* package to build a stacking
-ensemble.](https://stacks.tidymodels.org/). Under the hood, a LASSO
-meta-estimator will be trained upon the combined/stacked predictions of
-the above machine models against Miles per Gallon, which generally
-results in superior predictive performance.
+ensemble.](https://stacks.tidymodels.org/). Under the hood, LASSO and ridge regression
+meta-models will be trained upon the combined/stacked predictions of all
+the random forest, support vector machine, and linear regression models against Miles per Gallon, which generally
+results in superior predictive performance. [More information on stacking can be found here.](https://www.sciencedirect.com/science/article/pii/S0893608005800231)
 
 ```{r tidymodels-stacking, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
@@ -305,7 +436,7 @@ invisible(capture.output(
   stack_regressor <- stack_regressor |>
   blend_predictions(
     penalty =  10^(-10:-1),
-    mixture = 0,
+    mixture = seq(0, 1, length.out = 10),
     times = 10
   ) |>
   fit_members()
@@ -314,7 +445,16 @@ invisible(capture.output(
 stack_regressor
 ```
 
-We can view the predictions of the stacking ensemble:
+Above, we can see the models selected by our regularised linear regression meta-model. Let's plot the stacking process for our ensemble:
+
+```{r tidymodels-stacking-auto-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| fig-cap: Ensemble stacking results.
+p <- stacks_autoplot(stack_regressor) 
+
+ggplotly(p)
+```
+
+Finally, let's take a look at the predictions of the stacking ensemble:
 
 ```{r tidymodels-stacking-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set using stacking ensemble.
@@ -346,6 +486,7 @@ information on conformal inference.](https://arxiv.org/abs/2107.07511)
 
 ```{r tidymodels-conformalisation, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 patched_stack_regressor <- tidymodels_deployment$patch_tidymodel(stack_regressor, training_recipe, data_train)
+set.seed(200)
 conformalised_regressor <- int_conformal_split(patched_stack_regressor, data_train)
 conformalised_regressor$training <- data_train
 ```
@@ -398,7 +539,7 @@ intervals. Given a large enough testing dataset, we would expect roughly
 
 # Model Interpretation
 
-A conformalised stacking ensemble will be relatively black-box in
+A conformalised stacking ensemble (or many types of complex machine learning models) will be relatively black-box in
 nature. Ideally, we would want to be able to interrogate and interpret
 our model. [The DALEX package can be used to facilitate this
 interpretability.](https://dalex.drwhy.ai/) For this tutorial, we will
@@ -411,7 +552,7 @@ approach. Here, we will evaluate how much a model's prediction error
 increases when you randomly shuffle a feature's values. If shuffling a
 feature doesn't change the error then the feature wasn't important. If
 shuffling a feature makes the error spike then the feature is important
-for predictions.
+for predictions. [More information can be found here.](https://ema.drwhy.ai/featureImportance.html)
 
 ```{r fig-conformal-global-explain, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Permutation-based feature importances for the conformalised model.
@@ -445,7 +586,7 @@ The top 4 most important features are:
 
 We can next use a partial dependence plot (PDP) to visualise the effect
 of one or more features on Miles per Gallon for our model, while
-averaging out the effects of all other features.
+averaging out the effects of all other features. [Open this link for more information.](https://ema.drwhy.ai/partialDependenceProfiles.html)
 
 ```{r fig-conformal-pdp, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Partial dependence plots for the conformalised model.
@@ -466,7 +607,7 @@ number of Cylinders, with a drop-off at around 7 cylinders.
 ## Residuals
 
 We will next produce a residuals plot to determine how well the model
-predicted Miles per Gallon at different values.
+predicted Miles per Gallon at different values. [Open this link for more information.](https://ema.drwhy.ai/residualDiagnostic.html)
 
 ```{r fig-conformal-residuals, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Residual plot for the conformalised model.
@@ -486,7 +627,7 @@ under-prediction for Miles per Gallon over 29 and between 12.5 and 20.
 
 # Model versioning, sharing, and deployment
 
-Finally, we will demonstrate how to perform model versioning, sharing, and
+Finally, we will briefly demonstrate how to perform model versioning, sharing, and
 deployment using a combination of:
 
 -   [pins: For sharing and versioning resources and
@@ -566,6 +707,14 @@ re-run already completed code.
 parallelised computing within different execution
 environments.](https://books.ropensci.org/targets/crew.html)
 
+To view the targets pipeline code, run the following:
+
+```{r tidymodels-targets-pipeline, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+file.edit(here("pipelines", "_targets_tidymodels_deployment.R"))
+```
+
+Next, we can run the targets pipeline.
+
 ```{r tidymodels-targets, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 
 tar_make(
@@ -574,8 +723,3 @@ tar_make(
 )
 ```
 
-To view the targets pipeline code, run the following:
-
-```{r tidymodels-targets-pipeline, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
-file.edit(here("pipelines", "_targets_tidymodels_deployment.R"))
-```
