@@ -44,7 +44,7 @@ spec:
               value: random_forest_card
         - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
           imagePullPolicy: Always
-          name: brms-model
+          name: gompertz
           ports:
             - containerPort: 8090
               protocol: TCP
@@ -61,7 +61,7 @@ spec:
             - name: S3_ENDPOINT_URL
               value: http://r-pipelines:9000
             - name: MODEL_NAME
-              value: brms_model
+              value: gompertz
             - name: MODEL_PORT
               value: "8090"
       restartPolicy: Always

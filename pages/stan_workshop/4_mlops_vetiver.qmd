@@ -39,6 +39,8 @@ We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
 We first load all required dependencies.
 
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+Sys.setenv("S3_ENDPOINT_URL" = "http://127.0.0.1:9000")
+
 suppressWarnings(
   suppressPackageStartupMessages({
     library(dplyr)
@@ -62,11 +64,13 @@ suppressWarnings(
   })
 )
 
+source(here("R/stan_vetiver.R"))
+
 bayesplot::color_scheme_set("blue")                                   
 options(mc.cores = 1)                           
 ```
 
-## Data and Methods
+# Data
 
 We will load mussel data collected during Tom Moore's PhD.
 
@@ -80,3 +84,140 @@ df <- df[complete.cases(df),]
 head(df)
 ```
 :::
+
+# Model Fitting
+
+We will fit a Bayesian multi-level Gompertz curve, starting with a prior-only model.
+
+```{r stan-gompertz-priors, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+mod_formula <- bf(Weight ~ k * exp(-exp(-(r * (
+  Length - delay
+)))), k + r + delay ~ 0 + Intercept + Treatment, nl = TRUE)
+
+priors <- c(
+  prior(nlpar = "k", lb = 0, normal(50, 20)),
+  prior(nlpar = "r", lb = 0, normal(0, 0.05)),
+  prior(nlpar = "delay", lb = 0, normal(30, 2))    # Delay across the x-axis
+)
+
+# Priors
+gompertz_priors <- brm(
+  mod_formula,
+  family = Gamma(link = "identity"),
+  prior = priors,
+  sample_prior = "only",
+  seed = 4,
+  data = df,
+  threads = threading(
+    threads = NULL,
+    grainsize = 1250,
+    static = FALSE
+  ),
+  backend = "cmdstanr",
+  file = here("pages", "stan_workshop", "model", "NL_mod_2_priors_good"),
+  silent = 1,
+  refresh = 100,
+  chains = 4,
+  cores = 4,
+  warmup = 1000,
+  iter = 2000
+)
+
+gompertz_priors
+```
+
+Next, we will fit the full Gompertz model.
+
+```{r stan-gompertz, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: gompertz
+#| echo: true
+
+fit_brm <- function(formula, model_name, priors) {
+  brm(
+    formula,
+    family = Gamma(link = "identity"),
+    data = df,
+    prior = priors,
+    backend = "cmdstanr",
+    file = here("pages", "stan_workshop", "model", model_name),
+    threads = threading(3),
+    silent = 0,
+    refresh = 500,
+    chains = 4,
+    cores = 4,
+    warmup = 2000,
+    iter = 4000
+  )
+}
+
+mod_formula <- bf(Weight ~ k * exp(-exp(-(r * (
+  Length - delay
+)))), k + r + delay ~ 0 + Intercept + Treatment, nl = TRUE)
+
+priors <- c(
+  prior(nlpar = "k", lb = 0, normal(50, 20)),
+  prior(nlpar = "r", lb = 0, normal(0, 0.05)),
+  prior(nlpar = "delay", lb = 0, normal(30, 2)) 
+)
+
+gompertz_model <- fit_brm(mod_formula, "NL_mod_2", priors)
+gompertz_model$training <- df |> select(-Weight)
+gompertz_model$response <- df |> select(Weight)
+
+gompertz_model
+```
+
+# Model versioning, sharing, and deployment
+
+We will demonstrate how to perform model versioning, sharing, and
+deployment using a combination of *pins*, *vetiver*, and *plumber*. 
+
+In this example, we will first save our Gompertz model to an S3 bucket using *pins* and *vetiver*.
+
+```{r stan-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+board <- board_s3(
+  "data", 
+  access_key = "user", 
+  secret_access_key = "password", 
+  region = "us-east-2", 
+  endpoint = Sys.getenv("S3_ENDPOINT_URL") 
+)
+
+v_model <- vetiver_model(gompertz_model, "gompertz")
+vetiver_pin_write(v_model, board = board)
+```
+
+We will next load and interact with the saved fitted model locally using a plumber web application.
+
+```{r stan-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+loaded_v <- board |> 
+  vetiver_pin_read("gompertz")
+
+pr(here("app", "api", "plumber.R")) |>
+  vetiver_api(loaded_v) |>
+  pr_run(port = 8088)
+```
+
+# Docker
+
+[Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container](https://www.docker.com/). This ensures that the application runs consistently across different environments — whether on a developer's laptop, a testing server, or a production cloud environment. Docker helps developers "build once, run anywhere" without worrying about environment mismatches.
+
+Our objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:
+
+1. [We have a Dockerfile which contains a sequence of steps needed to build a Docker image. We copy our code from the R workshop repo into the Docker image (including the plumber web application code).](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/blob/main/dockerfiles/shiny/Dockerfile.0.1.0)
+2. [We define a pipeline that builds the Docker image and pushes it into a container repository.](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/blob/main/.github/workflows/build-r.yaml)
+3. [Our stored image may be found in the GitHub container repository.](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/pkgs/container/shiny-rpipelines)
+4. We can then pull down our stored image and instantiate a container to deploy our plumber web application, either using Docker directly or with a container orchestration platform such as Kubernetes.
+5. Our model can then be loaded into the web application within the container via S3.
+
+# Kubernetes
+
+[Kubernetes is an open-source platform that automates the deployment, scaling, and management of containerised applications, such as our deployed models.](https://kubernetes.io/)
+
+It organizes containers into logical units called pods, schedules them across a cluster of machines, and handles networking, storage, and load balancing. This ensures that your applications run reliably even as demand changes or failures occur. Kubernetes also provides self-healing features, automatically restarting or rescheduling containers when they fail. 
+
+In brief:
+
+1. Kubernetes will pull down our Docker image containing our plumber web application. 
+2. Kubernetes will then deploy our web application within a pod inside our Kubernetes cluster.
+3. Our S3 server is also running on Kubernetes, allowing us to load our model and any other artifacts of interest.
