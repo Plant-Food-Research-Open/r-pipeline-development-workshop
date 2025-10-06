@@ -316,6 +316,6 @@ Next, we can run the targets pipeline.
 
 tar_make(
   script = here("pipelines", "_targets_h2o_deployment.R"),
-  use_crew = TRUE
+  use_crew = FALSE
 )
 ```

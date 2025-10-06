@@ -1,24 +1,46 @@
 [
   {
-    "objectID": "pages/tidymodels_workshop/1_intro.html",
-    "href": "pages/tidymodels_workshop/1_intro.html",
-    "title": "Tidymodels Workshop",
+    "objectID": "pages/1_index.html",
+    "href": "pages/1_index.html",
+    "title": "Introduction",
     "section": "",
-    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "text": "Workshops on pipeline development and model deployment onto Kubernetes via Docker using R.",
     "crumbs": [
-      "Tidymodels",
-      "Tidymodels Workshop"
+      "Workshop Introduction",
+      "Introduction"
     ]
   },
   {
-    "objectID": "pages/tidymodels_workshop/1_intro.html#tidymodels",
-    "href": "pages/tidymodels_workshop/1_intro.html#tidymodels",
-    "title": "Tidymodels Workshop",
+    "objectID": "pages/1_index.html#introduction",
+    "href": "pages/1_index.html#introduction",
+    "title": "Introduction",
     "section": "",
-    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "text": "Workshops on pipeline development and model deployment onto Kubernetes via Docker using R.",
     "crumbs": [
-      "Tidymodels",
-      "Tidymodels Workshop"
+      "Workshop Introduction",
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "pages/1_index.html#tidymodels",
+    "href": "pages/1_index.html#tidymodels",
+    "title": "Introduction",
+    "section": "Tidymodels",
+    "text": "Tidymodels\n\nIntroduction\nThis workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\nHelpful background knowledge\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\nCoordinators\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "crumbs": [
+      "Workshop Introduction",
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "pages/1_index.html#stan-and-causal-inference",
+    "href": "pages/1_index.html#stan-and-causal-inference",
+    "title": "Introduction",
+    "section": "Stan and Causal Inference",
+    "text": "Stan and Causal Inference\n\nIntroduction\nThis workshop provides an overview of Bayesian modelling and causal inference using brms and cmdstanr.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\nHelpful background knowledge\nSome familiarity with R. Statistical concepts such as priors, posteriors, and Bayes’ rule.\n\n\nCoordinators\n\nTom Moore (Tom.Moore@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
+    "crumbs": [
+      "Workshop Introduction",
+      "Introduction"
     ]
   },
   {
@@ -88,80 +110,25 @@
     ]
   },
   {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html",
-    "title": "Machine Learning Workflow",
+    "objectID": "pages/tidymodels_workshop/1_intro.html",
+    "href": "pages/tidymodels_workshop/1_intro.html",
+    "title": "Tidymodels Workshop",
     "section": "",
-    "text": "In this section, we will demonstrate how one may train a machine learning model and tune its hyper-parameters using the tidymodels framework, which is composed of several packages for implementing machine learning workflows using tidyverse principles. tidymodels offers a unified interface to performing data preprocessing, modelling using various machine learning algorithms, model evaluation and visualisation, and cross-Validation & tuning. For more information, click this link.\nWe first load all required dependencies.\n\nbox::use(../../R/proj_utils)\nbox::use(../../R/tidymodels_deployment)\nbox::use(\n  dials[svm_margin, trees, penalty, mixture],\n  readr[read_csv, read_file],\n  tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],\n  here[here],\n  dplyr[mutate, bind_rows, arrange, select, pull, slice_head, slice_max, group_by, filter],\n  purrr[pluck],\n  ranger[ranger],\n  kernlab,\n  rsample[initial_split, vfold_cv, training, testing],\n  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],\n  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, step_rm, update, step_pca, prep, bake, all_numeric, all_outcomes, all_numeric_predictors],\n  yardstick[rmse, mae, metric_set, metrics],\n  hardhat[tune],\n  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon, geom_col, coord_flip, facet_wrap],\n  workflows[workflow, add_recipe, add_model],\n  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, workflow_autoplot = autoplot, rank_results],\n  tidyclust[k_means, tidy_clust = tidy],\n  stacks[stacks, add_candidates, blend_predictions, fit_members, stacks_autoplot = autoplot],\n  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],\n  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],\n  paws.common,\n  paws.storage,\n  plotly[ggplotly],\n  probably[int_conformal_split, cal_plot_regression],\n  plumber[pr, pr_run],\n  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],\n  DALEXtra[explain_tidymodels],\n  glmnet,\n  zeallot[...],\n  targets[tar_make]\n)\n\nsource(here(\"R/probably_vetiver.R\"))",
+    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
     "crumbs": [
       "Tidymodels",
-      "Machine Learning Workflow"
+      "Tidymodels Workshop"
     ]
   },
   {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html#principal-component-analysis",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html#principal-component-analysis",
-    "title": "Machine Learning Workflow",
-    "section": "Principal Component Analysis",
-    "text": "Principal Component Analysis\nWe will demonstrate how one may perform dimensionality reduction and clustering, primarily for visualisation purposes, on the mtcars dataset using tidymodels. We can take the data preprocessing training recipe specified above and extend from it to include a principal component analysis (PCA) preprocessing step. Click this link for more information on PCA.\n\npca_prep &lt;- training_recipe |&gt;\n  step_pca(all_numeric_predictors(), num_comp = 2) |&gt;\n  prep()\n\npca_results &lt;- pca_prep |&gt;\n  bake(new_data = data_train) |&gt;\n  mutate(car = data_train$car)\n\npca_explained &lt;- proj_utils$pca_var_explained(pca_prep, 2, 5) |&gt;\n  round(2) \n  \np &lt;- pca_results |&gt;\n  ggplot(aes(PC1, PC2, label = car)) +\n  geom_point(size = 1) +\n  theme_minimal() +\n  labs(x = paste0(\"PC1 (\", pca_explained[1], \" variance explained)\"), y = paste0(\"PC2 (\", pca_explained[2], \" variance explained)\"))\n  \nggplotly(p)\n\n\n\n\n\n\n\nFigure 1: Principal Component Analysis on mtcars\n\n\n\n\nThis just tells us which vehicles are similar to one another by car make. We can view the loadings (coefficients per original variable) for our PCA results:\n\n p &lt;- pca_prep |&gt;\n  tidy_clust(5) |&gt;\n  filter(component %in% c(\"PC1\", \"PC2\")) |&gt;\n  group_by(component) |&gt;\n  slice_max(abs(value), n = 5) |&gt;\n  arrange(component, desc(abs(value))) |&gt;\n  mutate(absval = abs(value)) |&gt;\n  group_by(component) |&gt;\n  slice_max(absval, n = 5) |&gt;\n  ggplot(aes(x = reorder(terms, value), y = value, fill = component)) +\n  geom_col(show.legend = FALSE) +\n  coord_flip() +\n  facet_wrap(~component, scales = \"free_y\") +\n  theme_minimal() +\n  labs(x = \"Variable\", y = \"Loading weight\")\n\nggplotly(p)\n\n\n\n\n\n\n\nFigure 2: Principal Component Analysis loadings for mtcars\n\n\n\n\nFor the first principal component (PC1):\n\nDisplacement (disp), Cylinders (cyl), Weight (wt), and Horsepower (hp) all have positive loadings, meaning they increase together along PC1. Cars with high PC1 scores tend to be heavier, more powerful, and larger-engined.\nEngine shape (vs) has a negative loading, meaning it moves opposite to PC1. Higher PC1 scores are associated with V-shaped engines (vs = 0), while straight engines (vs = 1) correspond to lower PC1 scores.\n\nPC1 primarily captures a “size and power vs engine type” gradient across the cars in the dataset.",
+    "objectID": "pages/tidymodels_workshop/1_intro.html#tidymodels",
+    "href": "pages/tidymodels_workshop/1_intro.html#tidymodels",
+    "title": "Tidymodels Workshop",
+    "section": "",
+    "text": "This workshop provides an overview of pipeline development and model deployment using the tidymodels framework in R. We incorporate tidymodels-compatible packages such as stacks, DALEX, and workflowsets.\nWe include a light introduction to MLOps principles for model deployment using the vetiver and plumber R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.\n\n\n\nSome familiarity with R. Statistical/machine learning concepts such as cross-validation and hyper-parameter tuning.\n\n\n\n\nJingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)\nLindy Guo (Lindy.Guo@plantandfood.co.nz)\nHana Liang (Yongqi.Liang@plantandfood.co.nz)\nJames Bristow (James.Bristow@plantandfood.co.nz)",
     "crumbs": [
       "Tidymodels",
-      "Machine Learning Workflow"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html#k-means-clustering",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html#k-means-clustering",
-    "title": "Machine Learning Workflow",
-    "section": "K-Means Clustering",
-    "text": "K-Means Clustering\nWe will next perform K-means clustering on the first two principal components of the mtcars dataset to group cars based on overall patterns in size, power, and efficiency. By reducing the data with PCA, we captured the main variance in fewer dimensions, and K-means then identifies clusters of similar cars. Click here to learn more about K-means clustering.\n\nset.seed(100)\nkmeans_res &lt;- pca_results |&gt;\n  select(-car) |&gt;\n  kmeans(centers = 3)\n  \np &lt;- pca_results |&gt;\n  mutate(cluster = as.factor(kmeans_res$cluster)) |&gt;\n  ggplot(aes(PC1, PC2, color = cluster, label = car)) +\n  geom_point(size = 1) +\n  theme_minimal() +\n  labs(x = paste0(\"PC1 (\", pca_explained[1], \" variance explained)\"), y = paste0(\"PC2 (\", pca_explained[2], \" variance explained)\"))\n  \nggplotly(p)\n\n\n\n\n\n\n\nFigure 3: Principal Component Analysis on mtcars\n\n\n\n\nThe resulting plot shows possible groupings, with clusters reflecting differences in engine size, weight, and horsepower. Have a play around with different values of k and see how that influences the clustering results.",
-    "crumbs": [
-      "Tidymodels",
-      "Machine Learning Workflow"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html#results",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html#results",
-    "title": "Machine Learning Workflow",
-    "section": "Results",
-    "text": "Results\nWe can visualise the results for the hyper-parameter optimisation of our 5-fold cross-validation procedure. We can compare the predictive performance of our 3 machine learning models.\n\n\n\n\nHyper-parameter optimisation results via grid search for 5-fold cross validation.\n\n\nWe see that the random forest models appear to have the greatest predictive accuracy, with linear regression having the poorest, and support vector machine sitting in the middle. Let’s view a table of metrics for the best models.\n\ntuned_model_set |&gt;\n  rank_results(rank_metric = \"rmse\") |&gt;\n  filter(.metric == \"rmse\") |&gt;\n  slice_head(n=5)\n\n# A tibble: 5 × 9\n  wflow_id    .config       .metric  mean std_err     n preprocessor model  rank\n  &lt;chr&gt;       &lt;chr&gt;         &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;\n1 standard_rf Preprocessor… rmse     2.68   0.481     5 recipe       rand…     1\n2 standard_rf Preprocessor… rmse     2.75   0.515     5 recipe       rand…     2\n3 standard_rf Preprocessor… rmse     2.77   0.551     5 recipe       rand…     3\n4 standard_rf Preprocessor… rmse     2.78   0.557     5 recipe       rand…     4\n5 standard_lr Preprocessor… rmse     2.78   0.560     5 recipe       line…     5\n\n\nWe finally retrieve the best fitted model, and evaluate it.\n\nbest_model &lt;- fit_best(tuned_model_set)\nbest_model\n\n══ Workflow [trained] ══════════════════════════════════════════════════════════\nPreprocessor: Recipe\nModel: rand_forest()\n\n── Preprocessor ────────────────────────────────────────────────────────────────\n5 Recipe Steps\n\n• step_zv()\n• step_nzv()\n• step_normalize()\n• step_impute_knn()\n• step_rm()\n\n── Model ───────────────────────────────────────────────────────────────────────\nRanger result\n\nCall:\n ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~58L,      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1)) \n\nType:                             Regression \nNumber of trees:                  58 \nSample size:                      25 \nNumber of independent variables:  10 \nMtry:                             3 \nTarget node size:                 5 \nVariable importance mode:         none \nSplitrule:                        variance \nOOB prediction error (MSE):       6.053727 \nR squared (OOB):                  0.8572674 \n\n\nLet’s plot the predictions of the best fitted model:\n\n\n\n\n\n\n\n\nFigure 4: Predicted and observed Miles per Gallon for testing set.",
-    "crumbs": [
-      "Tidymodels",
-      "Machine Learning Workflow"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html#feature-importances",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html#feature-importances",
-    "title": "Machine Learning Workflow",
-    "section": "Feature importances",
-    "text": "Feature importances\nWe will rank the importance of each feature by using a permutation-based approach. Here, we will evaluate how much a model’s prediction error increases when you randomly shuffle a feature’s values. If shuffling a feature doesn’t change the error then the feature wasn’t important. If shuffling a feature makes the error spike then the feature is important for predictions. More information can be found here.\n\n\nPreparation of a new explainer is initiated\n  -&gt; model label       :  conformal \n  -&gt; data              :  25  rows  11  cols \n  -&gt; target variable   :  25  values \n  -&gt; predict function  :  yhat.default will be used (  default  )\n  -&gt; predicted values  :  No value for predict function target column. (  default  )\n  -&gt; model_info        :  package Model of class: conformal_reg_split package unrecognized , ver. Unknown , task regression (  default  ) \n  -&gt; predicted values  :  predict function returns multiple columns:  3  (  default  ) \n  -&gt; residual function :  difference between y and yhat (  default  )\n  -&gt; residuals         :  numerical, min =  -6.305821 , mean =  0.2710079 , max =  7.020035  \n  A new explainer has been created!  \n\n\n\n\n\n\n\n\nFigure 9: Permutation-based feature importances for the conformalised model.\n\n\n\n\nThe top 4 most important features are:\n\ndisp (Displacement): Engine displacement in cubic inches.\nhp (Horsepower): Engine power in brake horsepower (bhp).\ncyl (Cylinders): Number of cylinders in the engine.\nwt (Weight): Weight of the car in 1000 lbs.",
-    "crumbs": [
-      "Tidymodels",
-      "Machine Learning Workflow"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html#partial-dependence",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html#partial-dependence",
-    "title": "Machine Learning Workflow",
-    "section": "Partial Dependence",
-    "text": "Partial Dependence\nWe can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features. Open this link for more information.\n\n\n\n\n\n\n\n\nFigure 10: Partial dependence plots for the conformalised model.\n\n\n\n\nWe see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 7 cylinders.",
-    "crumbs": [
-      "Tidymodels",
-      "Machine Learning Workflow"
-    ]
-  },
-  {
-    "objectID": "pages/tidymodels_workshop/2_ml_workflow.html#residuals",
-    "href": "pages/tidymodels_workshop/2_ml_workflow.html#residuals",
-    "title": "Machine Learning Workflow",
-    "section": "Residuals",
-    "text": "Residuals\nWe will next produce a residuals plot to determine how well the model predicted Miles per Gallon at different values. Open this link for more information.\n\n\n\n\n\n\n\n\nFigure 11: Residual plot for the conformalised model.\n\n\n\n\nWe see an S-shaped curve, suggesting that there is bias in the predictions. There is evidence of over-prediction for Miles per Gallon below 12.5 and between 20 and 29. Conversely, there is evidence of under-prediction for Miles per Gallon over 29 and between 12.5 and 20.",
-    "crumbs": [
-      "Tidymodels",
-      "Machine Learning Workflow"
+      "Tidymodels Workshop"
     ]
   },
   {
@@ -220,6 +187,17 @@
     ]
   },
   {
+    "objectID": "pages/2_coordinators.html",
+    "href": "pages/2_coordinators.html",
+    "title": "Coordinators",
+    "section": "",
+    "text": "James Bristow\nJames is a data scientist who specialises in Bayesian inference, machine learning, and semi-mechanistic modelling. He currently works part-time at PFR, primarily working with the crop modelling team using simulation platforms such as Agricultural Production Systems sIMulator (APSIM) and Growth Grammar-related Interactive Modelling Platform (GroIMP). James is also completing a PhD in statistical epidemiology at Massey University, focusing on the application of spatiotemporal modelling to Salmonella case counts within New Zealand, alongside animal influenza sequence data as part of an international collaboration with Cornell University. He completed his Master’s degree on Bayesian age and growth modelling of chondrichthyans with National Institute of Water and Atmospheric research (NIWA) as supported by a Fisheries New Zealand scholarship.\n\n\nJingjing Zhang\nJingjing is a data scientist and a quantitative ecologist specialising in using both statistical and simulation modelling tools to study the patterns of time-series and/or spatial data in ecology. Prior to joining PFR, Jingjing worked as a lecturer at the Auckland University of Technology. She completed Ph.D. at the University of Auckland, and afterwards worked as a quantitative Postdoc Research Fellow within NIWA. Her research interests are quantitative ecological modelling, the development of virtual ecology and its software tools.\n\n\nHana Liang\nHana is a data scientist based in Auckland. Since joining PFR, she has been working on various projects, focusing on sensor data ingestion and visualisation, model calibration, workflow orchestration, and pipeline implementation and deployment. She is also involved in computer vision projects, including deep learning–based image analysis. Hana has a bachelor’s degree from the University of Auckland majoring in Data Science and is currently studying a Master’s in Data Science part-time.\n\n\nLindy Guo\nLindy is a statistical scientist at PFR, bringing expertise in statistical analysis to the organization. Her background reflects a strong focus on statistical analysis and research, with experience in applying statistical methodologies to research initiatives. In their role as statistician, Lindy contributes to research activities, applying principles of biometrical analysis and experimental design. They are involved in data interpretation and statistical modeling to support research objectives. Prior to this, Lindy served as a statistician at AgResearch, where they focused on data analysis and statistical inference. Their work history includes a Teaching Assistant position at The University of Auckland. Lindy’s expertise is supported by a Master of Statistics degree from Auckland University, demonstrating applied statistical knowledge.\n\n\nTom Moore\nTom is a quantitative ecologist specialising in integrating scientific hypotheses into statistical models to address causal questions. During his PhD in freshwater ecology, he focused on examining the potential threats posed by non-native species to Kakāhi (mussels) using Bayesian inference techniques and structural causal models. In addition to expertise in ecological research, Tom has a strong background in applied statistics. He is particularly interested in the areas of nitrogen pollution, entomology, and invasive species, where he uses data spanning across time and space. One of his ongoing research projects involves investigating the impact of biocontrol methods on managing Queensland fruit fly populations in Australia, which can be used as a case study to introduce causal inference to ecologists.",
+    "crumbs": [
+      "Workshop Introduction",
+      "Coordinators"
+    ]
+  },
+  {
     "objectID": "pages/stan_workshop/2_causal_inference.html",
     "href": "pages/stan_workshop/2_causal_inference.html",
     "title": "Causal Inference and directed acyclic graphs",
@@ -257,7 +235,7 @@
     "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#results",
     "title": "Machine Learning Workflow using H2O",
     "section": "Results",
-    "text": "Results\nWe next view the evaluation results of the AutoML algorithm, sorting by predictive accuracy using the mean absolute error (MAE) metric.\n\nrank_results(auto_fit) |&gt;\n  filter(.metric == \"mae\") |&gt;\n  arrange(rank)\n\n# A tibble: 49 × 5\n   id                                              algorithm .metric  mean  rank\n   &lt;chr&gt;                                           &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt; &lt;int&gt;\n 1 GBM_grid_1_AutoML_10_20251006_210103_model_40   gradient… mae      1.85     1\n 2 DRF_1_AutoML_10_20251006_210103                 random f… mae      1.87     2\n 3 StackedEnsemble_BestOfFamily_4_AutoML_10_20251… stacking  mae      1.92     3\n 4 GBM_grid_1_AutoML_10_20251006_210103_model_17   gradient… mae      1.92     4\n 5 GBM_grid_1_AutoML_10_20251006_210103_model_18   gradient… mae      1.96     5\n 6 GBM_grid_1_AutoML_10_20251006_210103_model_8    gradient… mae      1.96     6\n 7 GBM_grid_1_AutoML_10_20251006_210103_model_13   gradient… mae      1.99     7\n 8 XRT_1_AutoML_10_20251006_210103                 random f… mae      2.06     8\n 9 GBM_5_AutoML_10_20251006_210103                 gradient… mae      2.10     9\n10 GBM_grid_1_AutoML_10_20251006_210103_model_21   gradient… mae      2.11    10\n# ℹ 39 more rows\n\n\nThe generalised linear models (GLMs) and gradient boosting machine (GBM) algorithms show promising results. We can next visualise the stacking ensemble member weights from H2O’s AutoML algorithm.\n\np &lt;- auto_fit |&gt;\n  extract_fit_parsnip() |&gt;\n  member_weights() |&gt;\n  unnest(importance) |&gt;\n  filter(type == \"scaled_importance\") |&gt;\n  ggplot() +\n  geom_boxplot(aes(value, algorithm)) +\n  scale_x_sqrt() +\n  labs(y = NULL, x = \"scaled importance\", title = \"Member importance in AutoML model\")\n\nggplotly(p)\n\n\n\n\n\n\n\nFigure 1: H20 AutoML model importances.\n\n\n\n\nThis plot shows that the GLM and GBM models are more heavily weighted in the ensemble than the other supported algorithms.",
+    "text": "Results\nWe next view the evaluation results of the AutoML algorithm, sorting by predictive accuracy using the mean absolute error (MAE) metric.\n\nrank_results(auto_fit) |&gt;\n  filter(.metric == \"mae\") |&gt;\n  arrange(rank)\n\n# A tibble: 46 × 5\n   id                                              algorithm .metric  mean  rank\n   &lt;chr&gt;                                           &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt; &lt;int&gt;\n 1 GLM_1_AutoML_1_20251007_13820                   glm       mae      1.95     1\n 2 GBM_grid_1_AutoML_1_20251007_13820_model_18     gradient… mae      2.05     2\n 3 GBM_grid_1_AutoML_1_20251007_13820_model_21     gradient… mae      2.12     3\n 4 XGBoost_grid_1_AutoML_1_20251007_13820_model_1  xgboost   mae      2.13     4\n 5 StackedEnsemble_BestOfFamily_3_AutoML_1_202510… stacking  mae      2.13     5\n 6 XGBoost_grid_1_AutoML_1_20251007_13820_model_2  xgboost   mae      2.15     6\n 7 GBM_grid_1_AutoML_1_20251007_13820_model_8      gradient… mae      2.16     7\n 8 DRF_1_AutoML_1_20251007_13820                   random f… mae      2.17     8\n 9 GBM_5_AutoML_1_20251007_13820                   gradient… mae      2.19     9\n10 XGBoost_3_AutoML_1_20251007_13820               xgboost   mae      2.23    10\n# ℹ 36 more rows\n\n\nThe generalised linear models (GLMs) and gradient boosting machine (GBM) algorithms show promising results. We can next visualise the stacking ensemble member weights from H2O’s AutoML algorithm.\n\np &lt;- auto_fit |&gt;\n  extract_fit_parsnip() |&gt;\n  member_weights() |&gt;\n  unnest(importance) |&gt;\n  filter(type == \"scaled_importance\") |&gt;\n  ggplot() +\n  geom_boxplot(aes(value, algorithm)) +\n  scale_x_sqrt() +\n  labs(y = NULL, x = \"scaled importance\", title = \"Member importance in AutoML model\")\n\nggplotly(p)\n\n\n\n\n\n\n\nFigure 1: H20 AutoML model importances.\n\n\n\n\nThis plot shows that the GLM and GBM models are more heavily weighted in the ensemble than the other supported algorithms.",
     "crumbs": [
       "Tidymodels",
       "Machine Learning Workflow using H2O"
@@ -268,7 +246,7 @@
     "href": "pages/tidymodels_workshop/3_ml_workflow_h2o.html#partial-dependence",
     "title": "Machine Learning Workflow using H2O",
     "section": "Partial Dependence",
-    "text": "Partial Dependence\nWe can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features.\n\n\nPreparation of a new explainer is initiated\n  -&gt; model label       :  conformal \n  -&gt; data              :  25  rows  10  cols \n  -&gt; target variable   :  25  values \n  -&gt; predict function  :  yhat.default will be used (  default  )\n  -&gt; predicted values  :  No value for predict function target column. (  default  )\n  -&gt; model_info        :  package Model of class: conformal_reg_split package unrecognized , ver. Unknown , task regression (  default  ) \n  -&gt; predicted values  :  predict function returns multiple columns:  3  (  default  ) \n  -&gt; residual function :  difference between y and yhat (  default  )\n  -&gt; residuals         :  numerical, min =  -2.895517 , mean =  0.1162897 , max =  3.617242  \n  A new explainer has been created!  \n\n\n\n\n\n\n\n\nFigure 3: Partial dependence plots for the AutoML model.\n\n\n\n\nWe see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 5 and 7 cylinders.",
+    "text": "Partial Dependence\nWe can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features.\n\n\nPreparation of a new explainer is initiated\n  -&gt; model label       :  conformal \n  -&gt; data              :  25  rows  10  cols \n  -&gt; target variable   :  25  values \n  -&gt; predict function  :  yhat.default will be used (  default  )\n  -&gt; predicted values  :  No value for predict function target column. (  default  )\n  -&gt; model_info        :  package Model of class: conformal_reg_split package unrecognized , ver. Unknown , task regression (  default  ) \n  -&gt; predicted values  :  predict function returns multiple columns:  3  (  default  ) \n  -&gt; residual function :  difference between y and yhat (  default  )\n  -&gt; residuals         :  numerical, min =  -9.192211 , mean =  2.534177e-15 , max =  12.34488  \n  A new explainer has been created!  \n\n\n\n\n\n\n\n\nFigure 3: Partial dependence plots for the AutoML model.\n\n\n\n\nWe see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 5 and 7 cylinders.",
     "crumbs": [
       "Tidymodels",
       "Machine Learning Workflow using H2O"
