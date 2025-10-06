@@ -1,4 +1,4 @@
-name: Build R
+name: Build RStudio
 
 on:
   release:
