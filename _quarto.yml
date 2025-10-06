@@ -27,8 +27,8 @@ website:
     contents:
       - section: "Workshop Introduction"
         contents:
-        - pages/index.qmd
-        - pages/coordinators.qmd
+        - pages/1_index.qmd
+        - pages/2_coordinators.qmd
       - section: "Tidymodels"
         contents:
         - pages/tidymodels_workshop/1_intro.qmd

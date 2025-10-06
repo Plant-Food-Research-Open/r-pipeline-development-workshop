@@ -12,7 +12,466 @@ editor:
     wrap: 72
 ---
 
+```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+library(dplyr)
+library(stringr)
+library(readxl)
+library(here)
+library(janitor)
+library(marginaleffects)
+library(pins)
+library(reshape2)
+library(arrow)
+library(cowplot)
+library(modelr)
+library(bnlearn)
+library(future)
+library(dagitty)
+library(cmdstanr)
+library(brms)
+library(ggdag)
+library(tidybayes)
+library(ggtext)
+library(ggplot2)
+library(simDAG)
+library(rethinking)
+library(forcats)
+
+bayesplot::color_scheme_set("blue")                                   
+options(mc.cores = 1)                           
+```
+
 # Introduction
 
-In this section, we will cover generalised linear madness.
+This analysis demonstrates science before statistics by incorporating
+prior knowledge in the modeling approach. Scientific phenomena are often
+modeled as linear relationships (i.e., generalized linear (mixed)
+models), which may not capture the data generating process.
 
+Fitting non-linear models such as logarithmic, polynomial curves, or
+splines may give us a good prediction of relationships, but doesn't
+allow us to estimate parameters of interest (e.g., maximum value or
+growth rate).
+
+## Data and Methods
+
+During my PhD, I measured the length and weight of \~3000 freshwater
+mussels (yes I'm that exciting!). I want to describe the relationship
+between length and weight between mussels collected inside macrophyte
+beds (aquatic plant beds: treatment) vs not (control) based on how the
+data was generated.
+
+Although the length-weight relationship isn't technically a temporal
+relationship (even I'm not going to measure \~3000 mussels repeatedly
+over time), substituting time for space (length) will allow us to fit a
+models that estimate the: a) maximum weight; and b) growth rate.
+
+To examine the relationship between the length and weight of freshwater
+mussels, generalized (non-)linear models were performed in R (R Core
+Team 2022) using the brms package (Bürkner, 2017). Linear, Gompertz
+(modified), and Logistic models were fitted with treatment (none vs
+macrophyte) as a predictor variable. A Gamma distribution was selected
+for the response since weight has positive and continuous values. Models
+were compared using leave-one-out cross validation and model validation
+was performed using prior and posterior predictive checks, as well as
+effective samples sizes and r-hats (McElreath, 2020).
+
+::: {.callout-tip title="Data" collapse="true"}
+```{r glms-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+df <- readr::read_csv(here("pages/stan_workshop/data/Mussel_df_15.01.20.csv"), show_col_types = FALSE)
+
+df <- df %>% dplyr::select(c(Length,Height,Width,Weight,Treatment,Macrophyte,Site))
+
+df <- df[complete.cases(df),]  # Select only complete cases
+
+head(df)
+```
+:::
+
+::: panel-tabset
+### Prior linear
+
+```{r glms-m1-bad-priors, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+mod_formula <- bf(Weight ~ 0 + Intercept + Length + Treatment)
+  
+priors <- c(prior(class = b, coef = Intercept, normal(0,1)),       # Intercept
+            prior(class = b, coef = TreatmentNone, normal(50,5)),  # Difference between treatments
+            prior(class = b, normal(0,10), lb = -10, ub = -2)      # Slope 
+            )
+
+# Priors
+nl_mod_1_priors <- brm(mod_formula, family = Gamma(link = "identity"),
+             prior = priors, 
+             sample_prior = "only", seed = 4,
+             data = df,
+             threads = threading(threads = NULL, grainsize = 1250, static = FALSE),
+             backend = "cmdstanr", 
+             file = here("pages", "stan_workshop", "model", "NL_mod_1_priors_bad"),
+             silent = 0, refresh = 100,
+             chains = 4, cores = 4, warmup = 1000, iter = 2000)
+
+conditional_effects(nl_mod_1_priors, effect = "Length", spaghetti = T, ndraws = 100)
+```
+
+### Prior Gompertz
+
+```{r glms-m2-good-priors, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+mod_formula <- bf(Weight ~ k * exp( -exp( -(r * (Length - delay)))),
+                  k + r + delay ~ 0 + Intercept + Treatment,
+                  nl = TRUE)
+  
+priors <- c(prior(nlpar = "k",     lb = 0, normal(50,20)),  # Max Weight 
+            prior(nlpar = "r",     lb = 0, normal(0,0.05)), # Growth Rate
+            prior(nlpar = "delay", lb = 0, normal(30,2))    # Delay across the x-axis 
+            )
+
+# Priors
+nl_mod_2_priors <- brm(mod_formula, family = Gamma(link = "identity"),
+             prior = priors, 
+             sample_prior = "only", seed = 4,
+             data = df, 
+             threads = threading(threads = NULL, grainsize = 1250, static = FALSE),
+             backend = "cmdstanr", 
+             file = here("pages", "stan_workshop", "model", "NL_mod_2_priors_good"),
+             silent = 1, refresh = 100,
+             chains = 4, cores = 4, warmup = 1000, iter = 2000)
+
+conditional_effects(nl_mod_2_priors, effect = "Length", spaghetti = T, ndraws = 100)
+```
+
+### Prior logistic
+
+```{r glms-m3-good-priors, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+mod_formula <- bf(Weight ~ M / (1 + (M - mu0) / mu0 * exp( -b * Length)),
+                  mu0 + b + M ~ 0 + Intercept + Treatment,
+                  nl = TRUE)
+  
+priors <- c(prior(nlpar = "mu0", lb = 0, normal(0,0.1)),  # Weight at length zero
+            prior(nlpar = "b",   lb = 0, normal(0,0.1)),  # Growth rate
+            prior(nlpar = "M",   lb = 0, normal(50,20))   # Max Weight
+            )
+
+# Priors
+nl_mod_3_priors <- brm(mod_formula, family = Gamma(link = "identity"),
+             prior = priors, 
+             sample_prior = "only", seed = 4,
+             data = df,
+             threads = threading(threads = NULL, grainsize = 1250, static = FALSE),
+             backend = "cmdstanr", 
+             file = here("pages", "stan_workshop", "model", "NL_mod_3_priors_good"),
+             silent = 0, refresh = 100,
+             chains = 4, cores = 4, warmup = 1000, iter = 2000)
+
+conditional_effects(nl_mod_3_priors, effect = "Length", spaghetti = T, ndraws = 100)
+```
+
+### Models
+
+```{r glms-logistic-priors, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: model_3
+#| echo: true
+
+fit_brm <- function(formula, model_name, priors) {
+  brm(formula,
+      family = Gamma(link = "identity"),
+      data = df,
+      prior = priors,
+      backend = "cmdstanr",
+      file = here("pages", "stan_workshop", "model", model_name),
+      threads = threading(3),
+      silent = 0,
+      refresh = 500,
+      chains = 4,
+      cores = 4,
+      warmup = 2000,
+      iter = 4000)
+}
+
+# Linear
+mod_formula <- bf(Weight ~ 0 + Intercept + Length + Treatment)     # Run with Gaussian family 
+  
+priors <- c(prior(class = b, coef = Intercept, normal(0,1)),       # Intercept
+            prior(class = b, coef = TreatmentNone, normal(50,5)),  # Difference between treatments
+            prior(class = b, normal(0,10), lb = -10, ub = -2)      # Slope 
+            )
+
+nl_mod_1 <- fit_brm(mod_formula, "NL_mod_1", priors)
+
+# Gompertz
+mod_formula <- bf(Weight ~ k * exp( -exp( -(r * (Length - delay)))),
+                  k + r + delay ~ 0 + Intercept + Treatment,
+                  nl = TRUE)
+  
+priors <- c(prior(nlpar = "k",     lb = 0, normal(50,20)),  # Max Weight 
+            prior(nlpar = "r",     lb = 0, normal(0,0.05)), # Growth Rate
+            prior(nlpar = "delay", lb = 0, normal(30,2))    # Delay across the x-axis 
+            )
+
+nl_mod_2 <- fit_brm(mod_formula, "NL_mod_2", priors)
+
+# Logistic
+mod_formula <- bf(Weight ~ M / (1 + (M - mu0) / mu0 * exp( -b * Length)),
+                  mu0 + b + M ~ 0 + Intercept + Treatment,
+                  nl = TRUE)
+  
+priors <- c(prior(nlpar = "mu0", lb = 0, normal(0,0.1)),  # Weight at length zero
+            prior(nlpar = "b",   lb = 0, normal(0,0.1)),  # Growth rate
+            prior(nlpar = "M",   lb = 0, normal(50,20))   # Max Weight
+            )
+
+nl_mod_3 <- fit_brm(mod_formula, "NL_mod_3", priors)
+```
+
+### Output
+
+```{r glms-logistic-summary, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: model-output_3
+#| echo: false
+#| 
+summary(nl_mod_1)
+summary(nl_mod_2)
+summary(nl_mod_3)
+```
+
+### Validation
+
+```{r glms-logistic-ppc, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: validation_3
+#| echo: false
+#| message: false
+#| fig-show: hold
+#| results: false
+#| layout-ncol: 2
+#| fig.width: 4
+#| fig.height: 2
+
+pp_check(nl_mod_1)
+pp_check(nl_mod_2)
+pp_check(nl_mod_3)
+```
+
+### Plot linear
+
+```{r glms-plot-linear, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+df %>%
+  group_by(Treatment) %>%
+  data_grid(Length = seq_range(Length, n = 101)) %>%
+  add_epred_draws(nl_mod_1, ndraws = 100) %>%
+  ggplot(aes(x = Length, y = Weight, color = Treatment)) +
+  theme_classic() +
+  geom_point(data = df, alpha = 0.25) +
+  geom_line(aes(y = .epred, group = paste(Treatment, .draw)), alpha = .1, color = "grey50") +
+  scale_x_continuous(limits = c(0,90), breaks = seq(0,90,10)) +
+  scale_y_continuous(limits = c(-100,100), breaks = seq(-100,100,10)) +
+  facet_wrap(~Treatment) +
+  scale_color_brewer(palette = "Dark2")
+```
+
+### Plot Gompertz
+
+```{r glms-plot-gompertz, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+df %>%
+  group_by(Treatment) %>%
+  data_grid(Length = seq_range(Length, n = 101)) %>%
+  add_epred_draws(nl_mod_2, ndraws = 100) %>%
+  ggplot(aes(x = Length, y = Weight, color = Treatment)) +
+  theme_classic() +
+  geom_point(data = df, alpha = 0.25) +
+  geom_line(aes(y = .epred, group = paste(Treatment, .draw)), alpha = .1, color = "grey50") +
+  scale_x_continuous(limits = c(0,90), breaks = seq(0,90,10)) +
+  scale_y_continuous(limits = c(0,80), breaks = seq(0,80,10)) +
+  facet_wrap(~Treatment) +
+  scale_color_brewer(palette = "Dark2")
+```
+
+### Plot Logistic
+
+```{r glms-plot-logistic, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+df %>%
+  group_by(Treatment) %>%
+  data_grid(Length = seq_range(Length, n = 101)) %>%
+  add_epred_draws(nl_mod_3, ndraws = 100) %>%
+  ggplot(aes(x = Length, y = Weight, color = Treatment)) +
+  theme_classic() +
+  geom_point(data = df, alpha = 0.25) +
+  geom_line(aes(y = .epred, group = paste(Treatment, .draw)), alpha = .1, color = "grey50") +
+  scale_x_continuous(limits = c(0,90), breaks = seq(0,90,10)) +
+  scale_y_continuous(limits = c(0,80), breaks = seq(0,80,10)) +
+  facet_wrap(~Treatment) +
+  scale_color_brewer(palette = "Dark2")
+```
+
+### Model comparison
+
+```{r glms-loo, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+loo(nl_mod_1, nl_mod_2, nl_mod_3)
+```
+
+### Stan code
+
+```{r glms-stan-code, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: stan_3
+#| echo: false
+
+mod_formula <- bf(Weight ~ k * exp( -exp( -(r * (Length - delay)))),
+                  k + r + delay ~ 0 + Intercept + Treatment,
+                  nl = TRUE)
+  
+priors <- c(prior(nlpar = "k",     lb = 0, normal(50,20)),  # Max Weight 
+            prior(nlpar = "r",     lb = 0, normal(0,0.05)), # Growth Rate
+            prior(nlpar = "delay", lb = 0, normal(30,2))    # Delay across the x-axis 
+            )
+
+make_stancode(
+  formula = mod_formula,
+  data = df,
+  prior = priors,
+  family = Gamma(link = "identity")
+)
+```
+:::
+
+## Conclusion
+
+Models can be used to estimate parameters of interest that better
+capture data generating process based on ecological theory.
+
+Prior information can be useful in constraining models to realistic
+estimates.
+
+Here the Gompertz and logistic models estimated the growth rate to be
+0.03 and 0.10 and maximum weight to be 115 (g) and 50.0 (g),
+respectively.
+
+### Food for thought:
+
+Which model is the best at capturing the data generating process?
+
+Could ecological theory informed techniques be applied to your own
+research?
+
+# Beyond brms: in space
+
+This section demonstrates the use of Stan to fit a choice model based on
+the hidden minds and observed behavior data example from McElreath
+(2020). The model estimates the probability of choosing a particular
+option based on the majority and minority choices, as well as the
+maverick and random choices.
+
+The five stratergies are:
+
+-   Follow the Majority: Copy the majority demonstrated color.
+-   Follow the Minority: Copy the minority demonstrated color.
+-   Maverick: Choose the color that no demonstrator chose.
+-   Random: Choose a color at random, ignoring the demonstrators.
+-   Follow First: Copy the color that was demonstrated first. This was
+    either the majority color (when majority_first equals 1) or the
+    minority color (when 0). (p. 533)
+
+::: panel-tabset
+```{r glms-stan-space-state, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+USE_VB <- FALSE
+
+data(Boxes, package = "rethinking")
+
+df_ss <- Boxes # hidden minds and observed behavior data example
+
+# prep data 
+dat_list <- list(
+  N = nrow(df_ss),
+  y = df_ss$y,
+  majority_first = df_ss$majority_first)
+
+choice_model_1 <- readLines(here("pages", "stan_workshop", "stan", "choice_model_1.stan"))
+
+if(USE_VB) {
+  choice_mod_1 <-
+    rstan::vb(rstan::stan_model(model_code = choice_model_1), 
+         data = dat_list
+  )
+} else {
+  choice_mod_1 <- rstan::stan(model_code = choice_model_1,
+       data = dat_list,
+       iter = 2000,
+       chains = 3,
+       cores = 1
+  )
+}
+```
+
+### Stan - Model
+
+```{r glms-stan-space-show-code, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| echo: false
+#| results: asis
+
+cat(readLines(here("pages", "stan_workshop", "stan", "choice_model_1.stan")), sep = "\n")
+```
+
+### Output
+
+```{r glms-stan-space-state-results, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: model_output_3
+
+print(choice_mod_1, pars = c("p"), digits = 3)
+```
+
+### Plot
+
+```{r glms-stan-space-state-plot, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: plot_3
+#| fig.height: 3
+
+label <- c("Majority~(italic(s)[1])", 
+           "Minority~(italic(s)[2])",
+           "Maverick~(italic(s)[3])", 
+           "Random~(italic(s)[4])", 
+           "Follow~First~(italic(s)[5])")
+
+rethinking::precis(choice_mod_1, depth = 2) %>% 
+  data.frame() %>% 
+  mutate(name = factor(label, levels = label)) %>% 
+  mutate(name = fct_rev(name)) %>% 
+  
+  ggplot(aes(x = mean, xmin = X5.5., xmax = X94.5., y = name)) +
+  theme_bw() +
+  geom_vline(xintercept = .2, linewidth = 1/4, linetype = 2) +
+  geom_pointrange(linewidth = 1/4, fatten = 6/4) +
+  scale_x_continuous(expression(italic(p[s])), limits = c(0, 1),
+                     breaks = 0:5 / 5) +
+  scale_y_discrete(NULL, labels = ggplot2:::parse_safe) +
+  theme(axis.text.y = element_text(hjust = 0))
+```
+:::
+
+# References
+
+McElreath, R. (2020). Statistical rethinking: A Bayesian course with
+examples in R and Stan. Chapman and Hall/CRC.
+
+R Core Team (2022). R: A language and environment for statistical
+computing. R Foundation for Statistical Computing, Vienna, Austria.
+<https://www.R-project.org/>
+
+::: {.callout-tip title="Session Information" collapse="true"}
+```{r session-info, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+
+#| label: session-info
+
+utils::sessionInfo()
+```
+:::

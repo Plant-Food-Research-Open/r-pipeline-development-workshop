@@ -14,9 +14,13 @@ editor:
 
 # Introduction
 
-In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes*. As a reminder:
+In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes* to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps—like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time
+
+As a reminder:
 
 - [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
 - [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
 
 We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
+
+We first load all required dependencies.

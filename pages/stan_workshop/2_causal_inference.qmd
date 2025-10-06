@@ -1,5 +1,5 @@
 ---
-title: "Causal Inference"
+title: "Causal Inference and directed acyclic graphs"
 date: today
 authors: "Tom Moore, James Bristow"
 fig-pos: 'H'
@@ -12,6 +12,502 @@ editor:
     wrap: 72
 ---
 
+```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+library(dplyr)
+library(stringr)
+library(readxl)
+library(here)
+library(janitor)
+library(marginaleffects)
+library(pins)
+library(reshape2)
+library(arrow)
+library(cowplot)
+library(modelr)
+library(bnlearn)
+library(future)
+library(dagitty)
+library(cmdstanr)
+library(brms)
+library(ggdag)
+library(tidybayes)
+library(ggtext)
+library(ggplot2)
+library(simDAG)
+
+bayesplot::color_scheme_set("blue")                                   
+options(mc.cores = 1)                           
+```
+
 # Introduction
 
-In this section, we will cover causal inference.
+In this section, we will cover causal inference via Stan and tools such as daggity.
+
+```{r dag-basic, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+basic_dag <- dagify(
+  Y ~ X + A,
+  X ~ A,
+  B ~ X + Y,
+  exposure = "X",
+  outcome = "Y",
+  coords = list(
+    x = c(X = 1, Y = 3, A = 2, B = 2),
+    y = c(X = 1, Y = 1, A = 2, B = 0)
+  )
+)
+
+basic_dag_plot <- basic_dag |> 
+  tidy_dagitty() |> 
+  mutate(var_type = case_when(
+    name == "X" ~ "Exposure",
+    name == "Y" ~ "Outcome",
+    str_detect(name, "A") ~ "Confounder",
+    str_detect(name, "B") ~ "Collider"
+  )) |> 
+  mutate(var_label = case_match(name,
+    "X" ~ "Treatment",
+    "Y" ~ "Outcome",
+    "A" ~ "",
+    "B" ~ ""
+  ))
+
+p1 <- ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = var_type), size = 12) +
+  geom_richtext(
+    aes(label = name), fontface = "bold", color = "white",
+    fill = NA, label.color = NA,
+    label.padding = grid::unit(c(3, 0, 0, 0), "pt")
+  ) + 
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type != "Confounder"), aes(label = var_label), 
+    nudge_y = -0.25, color = "black", size = 11, size.unit = "pt"
+  ) +
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type == "Confounder"), aes(label = var_label), 
+    nudge_y = 0.26, color = "black", size = 11, size.unit = "pt"
+  ) +
+   geom_text(
+    aes(x = (x + xend) / 2, y = (y + yend + 0.4) / 2, label =  c("","1.10","","","-1.70","-1.90")),
+    color = "black", size = 5
+  ) +
+  scale_color_manual(values = c("#44AA99", "#6699CC", "#882255","#999933"), guide = "none") +
+  theme_dag()
+```
+
+
+::: {.callout-tip title="Simulated data" collapse="true"}
+```{r dag-sim, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: Simulated data
+#| message: false
+
+dag <- empty_dag()
+
+dag <- dag + 
+  # parent nodes
+  node("a", type="rnorm", mean = 10, sd=4) +
+  
+  # child nodes
+  node("x", type="gaussian", parents=c("a"),     betas=c(3.6),
+       intercept=12,  error = 2) +
+  node("y", type="gaussian", parents=c("a","x"), betas=c(1.1, -1.7),
+       intercept=12,  error = 2) +
+  node("b", type="gaussian", parents=c("x","y"), betas=c(2.5, -1.9),
+       intercept=-15, error = 2) 
+
+set.seed(42)
+sim_dat <- sim_from_dag(dag=dag, n_sim=1000)
+
+head(sim_dat)
+```
+:::
+
+```{r dag-plot, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| out-width: 100%
+#| fig-height: 4
+#| fig-width: 6
+#| warning: false
+#| echo: false
+
+p1
+```
+
+**Figure 1:** DAG of the simulated data that shows the relationships (arrows) between the outcome (Y), treatment (X), and other measured variables (A + B). The numbers on the arrows represent the known magnitude and direction of relationships with Y.
+
+::: {.callout-tip title="Under the hood" collapse="true"}
+```{r dag-vis, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| out-width: 50%
+#| fig-height: 5
+#| fig-width: 6
+#| echo: false
+#| warning: false
+#| fig-show: hold
+#| results: false
+#| layout-ncol: 2
+
+sim_dat |>
+ggplot(aes(y = y, x = x, color = a)) +
+  theme_classic() +
+  geom_jitter(width = 10, height = 10) +
+  geom_smooth(color = "black", method = "lm", formula = 'y ~ x') +
+  scale_color_viridis_c() +
+  xlim(-20,120) +
+  ylim(-150,20)
+  
+sim_dat |>
+ggplot(aes(y = y, x = x, color = b)) +
+  theme_classic() +
+  geom_jitter(width = 10, height = 10) +
+  geom_smooth(color = "black", method = "lm", formula = 'y ~ x') +
+  scale_color_viridis_c() +
+  xlim(-20,120) +
+  ylim(-150,20)
+
+sim_dat |>
+ggplot(aes(y = x, x = a, color = b)) +
+  theme_classic() +
+  geom_jitter(width = 10, height = 10) +
+  geom_smooth(color = "black", method = "lm", formula = 'y ~ x') +
+  scale_color_viridis_c()
+
+sim_dat |>
+ggplot(aes(y = y, x = a, color = b)) +
+  theme_classic() +
+  geom_jitter(width = 10, height = 10) +
+  geom_smooth(color = "black", method = "lm", formula = 'y ~ x') +
+  scale_color_viridis_c()
+
+sim_dat |>
+ggplot(aes(y = b, x = x, color = a)) +
+  theme_classic() +
+  geom_jitter(width = 10, height = 10) +
+  geom_smooth(color = "black", method = "lm", formula = 'y ~ x') +
+  scale_color_viridis_c()
+
+sim_dat |>
+ggplot(aes(y = b, x = y, color = a)) +
+  theme_classic() +
+  geom_jitter(width = 10, height = 10) +
+  geom_smooth(color = "black", method = "lm", formula = 'y ~ x') +
+  scale_color_viridis_c()
+```
+:::
+
+# Science before statistics
+
+- Most approaches fail to recover the simulated value of -1.70.
+
+::: {.panel-tabset}
+
+## Models
+
+```{r dag-brms-model, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: models
+#| echo: true
+
+fit_brm <- function(formula, model_name) {
+  brm(formula,
+      family = gaussian(link = "identity"),
+      data = sim_dat,
+      backend = "cmdstanr",
+      file = here("pages", "stan_workshop", "model", model_name),
+      threads = threading(3),
+      silent = 0,
+      refresh = 500,
+      chains = 4,
+      cores = 4,
+      warmup = 2000,
+      iter = 4000)
+}
+
+
+# Models
+mod_1 <- fit_brm(y ~ x, "mod_1")         # Univariate
+mod_2 <- fit_brm(y ~ a, "mod_2")         # Univariate
+mod_3 <- fit_brm(y ~ b, "mod_3")         # Univariate
+mod_4 <- fit_brm(y ~ x + a + b, "mod_4") # Casual Salad
+mod_5 <- fit_brm(y ~ x + a, "mod_5")     # Confounder
+mod_6 <- fit_brm(y ~ x + b, "mod_6")     # Collider
+```
+
+## Output
+
+```{r dag-brms-model-summary, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: model-output
+#| echo: false
+#| 
+summary(mod_1)
+summary(mod_2)
+summary(mod_3)
+summary(mod_4)
+summary(mod_5)
+summary(mod_6)
+```
+
+## Validation
+
+```{r dag-brms-model-validation, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: validation
+#| echo: false
+#| message: false
+#| fig-show: hold
+#| results: false
+#| layout-ncol: 2
+#| fig.width: 4
+#| fig.height: 2
+
+pp_check(mod_1)
+pp_check(mod_2)
+pp_check(mod_3)
+pp_check(mod_4)
+pp_check(mod_5)
+pp_check(mod_6)
+```
+
+## Coefficients
+
+```{r dag-brms-model-coefficients, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: coefficients
+#| echo: false
+
+paste("mod_1:", round(summary(mod_1)$fixed$Estimate[[2]], 2))
+paste("mod_2:", round(summary(mod_2)$fixed$Estimate[[2]], 2))
+paste("mod_3:", round(summary(mod_3)$fixed$Estimate[[2]], 2))
+paste("mod_4: ", paste(round(summary(mod_4)$fixed$Estimate[2:4], 2), collapse = ", "))
+paste("mod_5:", round(summary(mod_5)$fixed$Estimate[[2]], 2))
+paste("mod_6:", round(summary(mod_6)$fixed$Estimate[[2]], 2))
+```
+
+## Stan code
+
+```{r dag-brms-model-stan-code, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: stan_1
+#| echo: false
+
+print("Example Stan code for mod_1")
+make_stancode(y ~ x, data = sim_dat, family = gaussian(link = "identity"))
+```
+
+:::
+
+```{r dag-conclusion, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| out-width: 50%
+#| fig-height: 5
+#| fig-width: 6
+#| echo: false
+#| warning: false
+#| results: false
+#| layout-ncol: 2
+
+basic_dag <- dagify(
+  Y ~ X + A,
+  X ~ A,
+  B ~ X + Y,
+  exposure = "X",
+  outcome = "Y",
+  coords = list(
+    x = c(X = 1, Y = 3, A = 2, B = 2),
+    y = c(X = 1, Y = 1, A = 2, B = 0)
+  )
+)
+
+basic_dag_plot <- basic_dag |> 
+  tidy_dagitty() |> 
+  mutate(var_type = case_when(
+    name == "X" ~ "Exposure",
+    name == "Y" ~ "Outcome",
+    str_detect(name, "A") ~ "Confounder",
+    str_detect(name, "B") ~ "Collider"
+  )) |> 
+  mutate(var_label = case_match(name,
+    "X" ~ "Treatment",
+    "Y" ~ "Outcome",
+    "A" ~ "",
+    "B" ~ ""
+  ))
+
+ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = var_type), size = 12) +
+  geom_richtext(
+    aes(label = name), fontface = "bold", color = "white",
+    fill = NA, label.color = NA,
+    label.padding = grid::unit(c(3, 0, 0, 0), "pt")
+  ) + 
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type != "Confounder"), aes(label = var_label), 
+    nudge_y = -0.25, color = "black", size = 11, size.unit = "pt"
+  ) +
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type == "Confounder"), aes(label = var_label), 
+    nudge_y = 0.26, color = "black", size = 11, size.unit = "pt"
+  ) +
+   geom_text(
+    aes(x = (x + xend) / 2, y = (y + yend + 0.4) / 2, label =  c("","-5.04","","","-1.40","-0.27")),
+    color = "black", size = 5
+  ) +
+   ggtitle("Univariate \ny ~ x \ny ~ a \ny ~ b") +
+  scale_color_manual(values = c("#44AA99", "#6699CC", "#882255","#999933"), guide = "none") +
+  theme_dag()
+
+basic_dag <- dagify(
+  Y ~ X + A,
+  X ~ A,
+  B ~ X + Y,
+  exposure = "X",
+  outcome = "Y",
+  coords = list(
+    x = c(X = 1, Y = 3, A = 2, B = 2),
+    y = c(X = 1, Y = 1, A = 2, B = 0)
+  )
+)
+
+basic_dag_plot <- basic_dag |> 
+  tidy_dagitty() |> 
+  mutate(var_type = case_when(
+    name == "X" ~ "Exposure",
+    name == "Y" ~ "Outcome",
+    str_detect(name, "A") ~ "Confounder",
+    str_detect(name, "B") ~ "Collider"
+  )) |> 
+  mutate(var_label = case_match(name,
+    "X" ~ "Treatment",
+    "Y" ~ "Outcome",
+    "A" ~ "",
+    "B" ~ ""
+  ))
+
+ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = var_type), size = 12) +
+  geom_richtext(
+    aes(label = name), fontface = "bold", color = "white",
+    fill = NA, label.color = NA,
+    label.padding = grid::unit(c(3, 0, 0, 0), "pt")
+  ) + 
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type != "Confounder"), aes(label = var_label), 
+    nudge_y = -0.25, color = "black", size = 11, size.unit = "pt"
+  ) +
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type == "Confounder"), aes(label = var_label), 
+    nudge_y = 0.26, color = "black", size = 11, size.unit = "pt"
+  ) +
+   geom_text(
+    aes(x = (x + xend) / 2, y = (y + yend + 0.4) / 2, label =  c("","0.15","","","0.71","-0.42")),
+    color = "black", size = 5
+  ) +
+  ggtitle("Multiple linear regression\n\"Causal salad\" \ny ~ x + a + b\n") +
+  scale_color_manual(values = c("#44AA99", "#6699CC", "#882255","#999933"), guide = "none") +
+  theme_dag()
+
+basic_dag <- dagify(
+  Y ~ X + A,
+  X ~ A,
+  B ~ X + Y,
+  exposure = "X",
+  outcome = "Y",
+  coords = list(
+    x = c(X = 1, Y = 3, A = 2, B = 2),
+    y = c(X = 1, Y = 1, A = 2, B = 0)
+  )
+)
+
+basic_dag_plot <- basic_dag |> 
+  tidy_dagitty() |> 
+  mutate(var_type = case_when(
+    name == "X" ~ "Exposure",
+    name == "Y" ~ "Outcome",
+    str_detect(name, "A") ~ "Confounder",
+    str_detect(name, "B") ~ "Collider"
+  )) |> 
+  mutate(var_label = case_match(name,
+    "X" ~ "Treatment",
+    "Y" ~ "Outcome",
+    "A" ~ "Confounder",
+    "B" ~ ""
+  ))
+
+ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = var_type), size = 12) +
+  geom_richtext(
+    aes(label = name), fontface = "bold", color = "white",
+    fill = NA, label.color = NA,
+    label.padding = grid::unit(c(3, 0, 0, 0), "pt")
+  ) + 
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type != "Confounder"), aes(label = var_label), 
+    nudge_y = -0.25, color = "black", size = 11, size.unit = "pt"
+  ) +
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type == "Confounder"), aes(label = var_label), 
+    nudge_y = 0.26, color = "black", size = 11, size.unit = "pt"
+  ) +
+   geom_text(
+    aes(x = (x + xend) / 2, y = (y + yend + 0.4) / 2, label =  c("","","","","-1.72","")),
+    color = "black", size = 5
+  ) +
+  ggtitle("Confounder \ny ~ x + a \n\n") +
+  scale_color_manual(values = c("#44AA99", "#6699CC", "#882255","#999933"), guide = "none") +
+  theme_dag()
+
+basic_dag <- dagify(
+  Y ~ X + A,
+  X ~ A,
+  B ~ X + Y,
+  exposure = "X",
+  outcome = "Y",
+  coords = list(
+    x = c(X = 1, Y = 3, A = 2, B = 2),
+    y = c(X = 1, Y = 1, A = 2, B = 0)
+  )
+)
+
+basic_dag_plot <- basic_dag |> 
+  tidy_dagitty() |> 
+  mutate(var_type = case_when(
+    name == "X" ~ "Exposure",
+    name == "Y" ~ "Outcome",
+    str_detect(name, "A") ~ "Confounder",
+    str_detect(name, "B") ~ "Collider"
+  )) |> 
+  mutate(var_label = case_match(name,
+    "X" ~ "Treatment",
+    "Y" ~ "Outcome",
+    "A" ~ "",
+    "B" ~ "Collider"
+  ))
+
+ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = var_type), size = 12) +
+  geom_richtext(
+    aes(label = name), fontface = "bold", color = "white",
+    fill = NA, label.color = NA,
+    label.padding = grid::unit(c(3, 0, 0, 0), "pt")
+  ) + 
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type != "Confounder"), aes(label = var_label), 
+    nudge_y = -0.25, color = "black", size = 11, size.unit = "pt"
+  ) +
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type == "Confounder"), aes(label = var_label), 
+    nudge_y = 0.26, color = "black", size = 11, size.unit = "pt"
+  ) +
+   geom_text(
+    aes(x = (x + xend) / 2, y = (y + yend + 0.4) / 2, label =  c("","","","","0.78","")),
+    color = "black", size = 5
+  ) +
+  ggtitle("Collider \ny ~ x + b \n\n") +
+  scale_color_manual(values = c("#44AA99", "#6699CC", "#882255","#999933"), guide = "none") +
+  theme_dag()
+```
+
+**Figure 2:** Various regression approaches to estimate the Y ~ X relationship (simulated value -1.71). Coefficients on arrows represent the estimated magnitude and direction of relationships. Conditioning on the confounder (A) returns the simulated value.
+
+
+- Without consideration of the causal structure underlying data, it is easy to draw incorrect conclusions.
+- Below is a simple example using a simulated dataset with four variables (Y, X, A, B).

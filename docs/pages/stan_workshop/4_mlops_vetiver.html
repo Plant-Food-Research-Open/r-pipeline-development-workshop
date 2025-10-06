@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-10-03">
+<meta name="dcterms.date" content="2025-10-06">
 
 <title>MLOps using vetiver – R Pipeline Development Workshop</title>
 <style>
@@ -136,13 +136,13 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../pages/index.html" class="sidebar-item-text sidebar-link">
+  <a href="../../pages/1_index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Introduction</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../pages/coordinators.html" class="sidebar-item-text sidebar-link">
+  <a href="../../pages/2_coordinators.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Coordinators</span></a>
   </div>
 </li>
@@ -164,8 +164,11 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
           <li class="sidebar-item">
- <span class="menu-text">pages/tidymodels_workshop/2_causal_inference.qmd</span>
-  </li>
+  <div class="sidebar-item-container"> 
+  <a href="../../pages/tidymodels_workshop/2_ml_workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning Workflow</span></a>
+  </div>
+</li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../pages/tidymodels_workshop/3_ml_workflow_h2o.html" class="sidebar-item-text sidebar-link">
@@ -198,7 +201,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../pages/stan_workshop/2_causal_inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Causal Inference</span></a>
+ <span class="menu-text">Causal Inference and directed acyclic graphs</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -280,7 +283,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 3, 2025</p>
+      <p class="date">October 6, 2025</p>
     </div>
   </div>
   
@@ -294,12 +297,14 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>In this section, we will demonstrate how one may combine <em>vetiver</em> and <em>plumber</em> with <em>Docker</em> and <em>Kubernetes</em>. As a reminder:</p>
+<p>In this section, we will demonstrate how one may combine <em>vetiver</em> and <em>plumber</em> with <em>Docker</em> and <em>Kubernetes</em> to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps—like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time</p>
+<p>As a reminder:</p>
 <ul>
 <li><a href="https://rstudio.github.io/vetiver-r/">vetiver: For model versioning, sharing, and deployment</a></li>
 <li><a href="https://www.rplumber.io/">plumber: For creating light-weight web applications, and deploying models as microservices</a></li>
 </ul>
 <p>We will elucidate upon <em>Docker</em> and <em>Kubernetes</em> in subsequent sections.</p>
+<p>We first load all required dependencies.</p>
 
 
 </section>

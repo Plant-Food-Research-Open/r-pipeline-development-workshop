@@ -33,7 +33,7 @@ box::use(
   readr[read_csv, read_file],
   tune[control_grid, extract_parameter_set_dials, .get_tune_metric_names, select_best],
   here[here],
-  dplyr[mutate, bind_rows, arrange, select, pull, slice_head],
+  dplyr[mutate, bind_rows, arrange, select, pull, slice_head, slice_max, group_by, filter],
   purrr[pluck],
   ranger[ranger],
   kernlab,
@@ -134,7 +134,7 @@ training_recipe <- data_train |>
 
 We will demonstrate how one may perform dimensionality reduction and clustering, primarily for visualisation purposes, on the mtcars dataset using tidymodels. We can take the data preprocessing training recipe specified above and extend from it to include a principal component analysis (PCA) preprocessing step. [Click this link for more information on PCA.](https://www.nature.com/articles/s43586-022-00184-w)
 
-```{r tidymodels-pca-cluster, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r tidymodels-pca, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Principal Component Analysis on mtcars
 pca_prep <- training_recipe |>
   step_pca(all_numeric_predictors(), num_comp = 2) |>
@@ -158,7 +158,7 @@ ggplotly(p)
 
 This just tells us which vehicles are similar to one another by car make. We can view the loadings (coefficients per original variable) for our PCA results:
 
-```{r tidymodels-pca-cluster, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r tidymodels-pca-loadings, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Principal Component Analysis loadings for mtcars
 
  p <- pca_prep |>
