@@ -73,7 +73,7 @@ ENV R_LIBS=${HOME}/renv/library/R-4.4/x86_64-pc-linux-gnu \
     VIRTUAL_ENV=${HOME}/.venv \
     PATH="${HOME}/.venv/bin:$PATH"
 
-COPY --chown=${NB_USER}:${NB_USER} ./app ./app
+COPY --chown=${NB_USER}:${NB_USER} ./app ${HOME}/app
 
 COPY --chown=${NB_USER}:${NB_USER} ./R ${HOME}/R
 
