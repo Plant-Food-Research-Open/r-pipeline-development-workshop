@@ -4,7 +4,7 @@ date: '`r Sys.Date()`'
 output: 
   html_document
 params:
-    name: conformal_ensemble
+    name: random_forest
     version: NULL
 ---
 
@@ -118,19 +118,6 @@ preds
 ```{r, eval=TRUE}
 preds |>
     metrics(mpg, .pred)
-```
-
-### Visualize model performance
-
-```{r, fig.height=3, eval=TRUE}
-library(ggplot2)
-p <- preds |>
-    ggplot(aes(mpg, .pred)) +
-    geom_abline(slope = 1, lty = 2, color = "darkblue", size = 1.2) +
-    geom_point(alpha = 0.5, show.legend = FALSE) +
-    geom_ribbon(aes(ymin = .pred_lower, ymax = .pred_upper), fill = "lightblue", alpha = 0.2)
-
-plotly::ggplotly(p)
 ```
 
 ## Ethical considerations

@@ -156,7 +156,7 @@ save_s3_plot <- function(p, object_name, model, board) {
 
   p |> 
     ggplotly() |>
-    saveWidget(file.path("/tmp", outfile))
+    saveWidget(file.path("/tmp", outfile), selfcontained = TRUE)
     
   model <- proj_utils$model_s3_upload(
     model, board, Sys.getenv("S3_ENDPOINT_URL"), 

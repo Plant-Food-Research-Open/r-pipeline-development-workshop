@@ -1,198 +1,201 @@
-update_select <- function(session, df_choices, x_col, y_col, id) {
-  if(x_col != y_col) {
-    return()
-  }
-  
-  indx <- match(x_col, df_choices) + 1
-  if(is.na(indx)) { return()}
-  
-  if(indx > length(df_choices)) {
-    indx <- 1
-  }
-  
-  updateSelectizeInput(
-    session, id, choices = df_choices, server = FALSE,
-    selected = df_choices[indx]
-  )
-}
-
 server <- function(input, output, session) {
-  dataset <- reactive({
-    input$dataset
+  model_choice <- reactive({
+    input$model_choice
   }) 
   
-  x_col <- reactive({
-    input$x_col
+  plot_choice <- reactive({
+    input$plot_choice
+  })
+  
+  x_ax <- reactive({
+    input$x_ax
   })  
   
-  y_col <- reactive({
-    input$y_col
+  y_ax <- reactive({
+    input$y_ax
   })  
+  
+  axes_choices <- reactive({
+    df() |>
+      colnames()
+  })
+  
+  model_endpoint <- reactive({
+    val <- model_choice()
+    idx <- match(val, model_choices)
+    model_endpoints[[idx]]
+  })
   
   df <- reactive({
-    read.csv(
-      paste0(dataset(), ".csv")
-    )
-  }) %>%
-    bindCache(
-      input$dataset
-    )
+    paste(model_endpoint(), "data", sep = "/") |>
+      GET() |>
+      content("text") |>
+      fromJSON() |>
+      as_tibble()
+  }) |>
+    bindCache(input$model_choice)
   
-  df_choices <- reactive({
-    colnames(df())
-  })
+  model_card <- reactive({
+    paste(model_endpoint(), "card", sep = "/") |>
+      GET() |>
+      content("text") |>
+      fromJSON()
+  }) |>
+    bindCache(input$model_choice)
   
-  observeEvent(input$dataset, {
-    choices <- df_choices()
-    
-    progress <- shiny::Progress$new()
-    on.exit(progress$close())
-    
-    progress$set(message = "Loading data...", value = 0)
-    
-    n <- 10
-    for (i in 1:n) { 
-      progress$inc(1/n, detail = paste("Progress: ", i/n * 100, "%"))
-      Sys.sleep(0.1)
+  s3_list <- reactive({
+    paste(model_endpoint(), "s3-objects", sep = "/") |>
+      GET() |>
+      content("text") |>
+      fromJSON()
+  }) |>
+    bindCache(input$model_choice)
+  
+  s3_object <- reactive({
+    val <- plot_choice()
+    idx <- match(val, plot_choices())
+    if(is.na(idx)) {
+      return()
     }
-    
-    updateSelectizeInput(
-      session, "x_col", choices = choices, server = FALSE,
-      selected = choices[1]
-    )
-    
-    updateSelectizeInput(
-      session, "y_col", choices = choices, server = FALSE,
-      selected = choices[2]
-    )
-    
-    showNotification(
-      paste("Current Dataset: ", dataset()),
-      duration = 1.25,
-      type = "message"
-    )
+    s3_list()[idx]
   })
   
+  plot_choices <- reactive({
+    s3_list() |>
+      basename() |>
+      file_path_sans_ext()
+  })
   
-  output$plot <- renderPlotly({
-    df <- df()
-    df_choices <- df_choices()
-    x_col <- x_col()
-    y_col <- y_col()
+  model_card_content <- reactive({
+    doc <- GET(model_card()) |>
+      content("text", encoding = "UTF-8") |>
+      read_html() 
     
-    if((!x_col %in% df_choices) || ( !y_col %in% df_choices)) {
+    xml_remove(xml_find_all(doc, ".//style"))
+    xml_remove(xml_find_all(doc, ".//script"))
+    
+    as.character(doc) |>
+    HTML()
+  }) |>
+    bindCache(input$model_choice)
+  
+  observeEvent(input$model_choice, {
+    output$table <- renderDataTable({
+      df()
+    })
+    
+    output$summary <- renderDataTable({
+      summary(df()) |>
+        as.data.frame() |>
+        mutate(Variable = Var2, Statistic = Freq) |>
+        select(Variable, Statistic) 
+    })
+    
+    output$model_card <- renderUI({
+      model_card_content()
+    })
+    
+    updateSelectizeInput(
+      session, "plot_choice", choices = plot_choices(), server = FALSE,
+      selected = plot_choices()[1]
+    )
+    
+    axes_choices <- axes_choices()
+    updateSelectizeInput(
+      session, "x_ax", choices = axes_choices, server = FALSE,
+      selected = axes_choices[1]
+    )
+    
+    updateSelectizeInput(
+      session, "y_ax", choices = axes_choices, server = FALSE,
+      selected = axes_choices[2]
+    )
+    
+  })
+  
+  observeEvent(input$plot_choice, { 
+    output$dynamic_plot <- renderUI({
+      src <- s3_object() |>
+        GET() |>
+        content("text", encoding = "UTF-8")
+
+      tags$iframe(
+        srcdoc= src,
+        width = "100%",
+        height = "100%",
+        frameborder = "0"
+      ) 
+    })
+  })
+  
+  output$scatter <- renderPlotly({
+    axes_choices <- axes_choices()
+    x_ax <- x_ax()
+    y_ax <- y_ax()
+    
+    if((!x_ax %in% axes_choices) || ( !y_ax %in% axes_choices)) {
       return()  
     }
     
-    (df %>%
-        ggplot(
-          aes(x=.data[[x_col]], y=.data[[y_col]] )
-        ) +
+    (
+      df() |>
+        ggplot(aes(x=.data[[x_ax]], y=.data[[y_ax]])) +
         geom_point() +
-        geom_line()) %>%
-      ggplotly()
-    
+        geom_line()
+    ) |>
+    ggplotly()
+      
   }) 
   
-  output$summary <- renderDataTable({
-    summary(df()) %>%
-      as.data.frame() %>%
-      mutate(Variable = Var2, Statistic = Freq) %>%
-      select(Variable, Statistic) 
-  })
-  
-  output$table <- renderDataTable({
-    df()  
-  })
-  
-  
-  render_histogram <- function(df, df_choices, col_name) {
-    if((!col_name %in% df_choices)) {
+  render_histogram <- function(df, axes_choices, ax) {
+    if((!ax %in% axes_choices)) {
       return()  
     }
     
-    (df %>%
-        ggplot(aes(x=.data[[col_name]])) +
-        geom_histogram()) %>%
+    (
+      df |>
+        ggplot(aes(x=.data[[ax]])) +
+        geom_histogram()
+    ) |>
       ggplotly()
   }
   
   output$histogram_x <-  renderPlotly({
-    render_histogram(df(), df_choices(), x_col())
+    render_histogram(df(), axes_choices(), x_ax())
   }) 
   
   output$histogram_y <-  renderPlotly({
-    render_histogram(df(), df_choices(), y_col())
+    render_histogram(df(), axes_choices(), y_ax())
   })
   
-  dataModal <- function(failed = FALSE) {
-    modalDialog(
-      selectInput(
-        "download_dataset", "Download dataset",
-        dataset_choices,
-        multiple = FALSE,
-        selectize = TRUE
-      ),
-      
-      footer = tagList(
-        downloadButton("downloadData", "Download"),
-        actionButton("download_dataset_ok", "Close")
-      )
-    )
-  }
-  
-  observeEvent(input$download_data, {
-    showModal(dataModal())
-  })
-  
-  download_dataset <- reactive({
-    input$download_dataset
-  })
-  
-  df_download <- reactive({
-    read.csv(
-      paste0(download_dataset(), ".csv")
-    )
-  }) %>%
-    bindCache(
-      input$download_dataset
-    )
-  
-  output$downloadData <- downloadHandler(
+  output$download_data <- downloadHandler(
     filename = function() {
-      paste0(download_dataset(), "-", Sys.Date(),  ".csv")
+      paste(model_choice(), "-data-", Sys.Date(), ".csv", sep = "")
     },
     content = function(file) {
-      write.csv(df_download(), file)
+      write.csv(df(), file, row.names = FALSE)
     }
   )
   
-  observeEvent(input$download_dataset_ok, {
-    download_dataset <- download_dataset()
-    
-    if(is.null(download_dataset)){ return() }
-    removeModal()
-    
-    showNotification(
-      "Returning home",
-      duration = 2.5,
-      type = "message"
-    )
-  })
+  output$download_card <- downloadHandler(
+    filename = function() {
+      paste(model_choice(), "-card-", Sys.Date(), ".html", sep = "")
+    },
+    content = function(file) {
+      GET(model_card()) |>
+        content("text", encoding = "UTF-8") |>
+        writeLines(file)
+    }
+  )
   
-  mapping_location <- reactive({
-    input$mapping_location
-  })
-  
-  observeEvent(input$mapping_location, {
-    showNotification(
-      paste("Current Map: ", input$mapping_location),
-      duration = 1.25,
-      type = "message"
-    )
-  })
-  
-  map_zoom <- reactive({
-    input$map_zoom
-  })
+  output$download_plot <- downloadHandler(
+    filename = function() {
+      paste(model_choice(), "-plot-", Sys.Date(), ".html", sep = "")
+    },
+    content = function(file) {
+      GET(s3_object()) |>
+        content("text", encoding = "UTF-8") |>
+        writeLines(file)
+    }
+  )
 }

@@ -1,5 +1,5 @@
 ui <- page_sidebar(
-  title = "Dashboard",
+  title = "R Pipeline Development",
   
   theme = bs_theme(
     bootswatch = "lux",
@@ -10,60 +10,53 @@ ui <- page_sidebar(
   
   sidebar = sidebar(
     bg = "white",
+    width = "25%",
     accordion(
       accordion_panel(
         "Inputs",
-        radioButtons(
-          "dataset", 
-          tooltip(
-            span("Dataset", bsicons::bs_icon("question-circle-fill")),
-            "Select explanatory and response variables for a dataset.",
-            placement = "left"
-          ),
-          dataset_choices,
-          inline = TRUE
+        selectInput(
+          "model_choice",
+          "Model",
+          choices = model_choices,
+          multiple = FALSE,
+          selectize = TRUE
         ),
         selectInput(
-          "x_col",
-          "X column",
+          "x_ax",
+          "X axis",
           character(0),
           selectize = TRUE
         ),
         selectInput(
-          "y_col",
-          "Y column",
+          "y_ax",
+          "Y axis",
           character(0),
+          multiple = FALSE,
+          selectize = TRUE
+        ),
+        selectInput(
+          "plot_choice",
+          "Plot",
+          choices = c(),
           multiple = FALSE,
           selectize = TRUE
         )
       ),
       accordion_panel(
-        "File Management",
-        actionButton("download_data", "Download Dataset")
+        "Downloads",
+        downloadButton("download_data", "Download Data"),
+        downloadButton("download_card", "Download Card"),
+        downloadButton("download_plot", "Download Plot")
       )
     )
   ),
   
   navset_card_underline(
-    title = "Outputs",
+    title = "Results",
     nav_panel(
-      "Plot", 
+      "Scatter", 
       card(
-        plotlyOutput("plot"),
-        full_screen = TRUE
-      )
-    ),
-    nav_panel(
-      "Summary", 
-      card(
-        dataTableOutput("summary"),
-        full_screen = TRUE
-      )
-    ),
-    nav_panel(
-      "Data Table", 
-      card(
-        dataTableOutput("table"),
+        plotlyOutput("scatter"),
         full_screen = TRUE
       )
     ),
@@ -79,6 +72,35 @@ ui <- page_sidebar(
           full_screen = TRUE
         )
       )
+    ),
+    nav_panel(
+      "Data Table",
+      card(
+        dataTableOutput("table"),
+        full_screen = TRUE
+      )
+    ),
+    nav_panel(
+      "Summary",
+      card(
+        dataTableOutput("summary"),
+        full_screen = TRUE
+      )
+    ),
+    nav_panel(
+      "Model Card",
+      card(
+        htmlOutput("model_card"),
+        full_screen = TRUE
+      )
+    ),
+    nav_panel(
+      "Plot",
+      card(
+        htmlOutput("dynamic_plot"),
+        full_screen = TRUE
+      )
     )
   )
-)  
+)
+ 
