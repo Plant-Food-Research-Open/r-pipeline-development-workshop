@@ -53,7 +53,7 @@ jobs:
           sudo apt-get autoclean -y >/dev/null 2>&1
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          df -h      
+          df -h
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -68,7 +68,3 @@ jobs:
         run: |
           docker compose build shiny
           docker compose push shiny
-      - name: Docker push rstudio
-        run: |
-          docker compose build rstudio
-          docker compose push rstudio
