@@ -49,7 +49,8 @@ options(mc.cores = 1)
 
 # Introduction
 
-In this section, we will cover causal inference via Stan and tools such as daggity.
+- Without consideration of the causal structure underlying data, it is easy to draw incorrect conclusions.
+- Below is a simple example using a simulated dataset with four variables (Y, X, A, B).
 
 ```{r dag-basic, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 basic_dag <- dagify(
