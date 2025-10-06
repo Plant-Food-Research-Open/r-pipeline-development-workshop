@@ -58,7 +58,7 @@ Please refer to the following links:
 
 # Announcements
 
-To view workshop announcements, [please select this link.](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/tree/main/announcements/index.qmd)
+To view workshop announcements, [please select this link.](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/tree/main/pages/announcements/index.qmd)
 
 # Contributions and Support
 
