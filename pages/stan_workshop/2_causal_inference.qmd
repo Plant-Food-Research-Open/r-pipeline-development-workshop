@@ -517,5 +517,125 @@ ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
 **Figure 2:** Various regression approaches to estimate the Y ~ X relationship (simulated value -1.71). Coefficients on arrows represent the estimated magnitude and direction of relationships. Conditioning on the confounder (A) returns the simulated value.
 
 
-- Without consideration of the causal structure underlying data, it is easy to draw incorrect conclusions.
-- Below is a simple example using a simulated dataset with four variables (Y, X, A, B).
+# Everything, everywhere, all at once
+
+- Modeled as a series of structural equations that represent the data generating process.
+
+::: {.panel-tabset}
+
+## Models
+
+```{r dag-sem-fit, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: model_2
+#| echo: true
+
+# Model
+se_1 <- bf(x ~ a,     family = gaussian)
+se_2 <- bf(y ~ x + a, family = gaussian)
+se_3 <- bf(b ~ x + y, family = gaussian)
+
+mod_7 <- fit_brm(se_1 + se_2 + se_3 + set_rescor(FALSE), "mod_7") # Full Luxury Bayesian Inference
+```
+
+## Output
+
+```{r dag-sem-summary, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: model-output_2
+#| echo: false
+#| 
+summary(mod_7)
+```
+
+## Validation
+
+```{r dag-sem-ppc, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+#| label: validation_2
+#| echo: false
+#| message: false
+#| fig-show: hold
+#| results: false
+#| layout-ncol: 3
+#| fig.width: 4
+#| fig.height: 2
+
+pp_check(mod_7, resp = "y")
+pp_check(mod_7, resp = "x")
+pp_check(mod_7, resp = "b")
+```
+
+## Coefficients
+
+```{r dag-sem-fixed, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: coefficients_2
+#| echo: false
+
+summary(mod_7)$fixed
+```
+
+## Stan code
+
+```{r dag-sem-stancode, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+#| label: stan_2
+#| echo: false
+
+make_stancode(se_1 + se_2 + se_3 + set_rescor(FALSE), data = sim_dat)
+```
+
+:::
+
+```{r dag-sem-dag-plot, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+basic_dag <- dagify(
+  Y ~ X + A,
+  X ~ A,
+  B ~ X + Y,
+  exposure = "X",
+  outcome = "Y",
+  coords = list(
+    x = c(X = 1, Y = 3, A = 2, B = 2),
+    y = c(X = 1, Y = 1, A = 2, B = 0)
+  )
+)
+
+basic_dag_plot <- basic_dag |> 
+  tidy_dagitty() |> 
+  mutate(var_type = case_when(
+    name == "X" ~ "Exposure",
+    name == "Y" ~ "Outcome",
+    str_detect(name, "A") ~ "Confounder",
+    str_detect(name, "B") ~ "Collider"
+  )) |> 
+  mutate(var_label = case_match(name,
+    "X" ~ "Treatment",
+    "Y" ~ "Outcome",
+    "A" ~ "",
+    "B" ~ ""
+  ))
+
+ggplot(basic_dag_plot, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = var_type), size = 12) +
+  geom_richtext(
+    aes(label = name), fontface = "bold", color = "white",
+    fill = NA, label.color = NA,
+    label.padding = grid::unit(c(3, 0, 0, 0), "pt")
+  ) + 
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type != "Confounder"), aes(label = var_label), 
+    nudge_y = -0.25, color = "black", size = 11, size.unit = "pt"
+  ) +
+  geom_dag_text(
+    data = filter(basic_dag_plot, var_type == "Confounder"), aes(label = var_label), 
+    nudge_y = 0.26, color = "black", size = 11, size.unit = "pt"
+  ) +
+   geom_text(
+    aes(x = (x + xend) / 2, y = (y + yend + 0.4) / 2, label =  c("3.60","1.15","","2.45","-1.72","-1.93")),
+    color = "black", size = 5
+  ) +
+  scale_color_manual(values = c("#44AA99", "#6699CC", "#882255","#999933"), guide = "none") +
+  theme_dag()
+```
+

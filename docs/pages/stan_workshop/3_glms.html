@@ -343,34 +343,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressWarnings</span>(</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">suppressPackageStartupMessages</span>({</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(dplyr)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(stringr)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(readxl)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(here)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(janitor)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(marginaleffects)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(pins)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(reshape2)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(arrow)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(cowplot)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(modelr)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(bnlearn)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(future)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(dagitty)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(cmdstanr)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(brms)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggdag)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(tidybayes)</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggtext)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(simDAG)</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(rethinking)</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(forcats)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>bayesplot<span class="sc">::</span><span class="fu">color_scheme_set</span>(<span class="st">"blue"</span>)                                   </span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">mc.cores =</span> <span class="dv">1</span>)                           </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(rstan)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(dplyr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(stringr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(readxl)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(here)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(janitor)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(marginaleffects)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(pins)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(reshape2)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(arrow)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(cowplot)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(modelr)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(bnlearn)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(future)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(dagitty)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(cmdstanr)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(brms)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggdag)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(tidybayes)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggtext)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(simDAG)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(rethinking)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(forcats)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>bayesplot<span class="sc">::</span><span class="fu">color_scheme_set</span>(<span class="st">"blue"</span>)                                   </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">mc.cores =</span> <span class="dv">1</span>)                           </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
@@ -985,13 +986,13 @@ data{
 post-warmup draws per chain=1000, total post-warmup draws=3000.
 
       mean se_mean    sd  2.5%   25%   50%   75% 97.5% n_eff  Rhat
-p[1] 0.256   0.001 0.036 0.181 0.232 0.257 0.281 0.324   818 1.004
-p[2] 0.138   0.001 0.033 0.072 0.116 0.139 0.161 0.199   724 1.002
-p[3] 0.147   0.001 0.032 0.082 0.126 0.148 0.170 0.206   727 1.002
-p[4] 0.199   0.004 0.083 0.056 0.138 0.192 0.252 0.379   558 1.003
-p[5] 0.260   0.001 0.032 0.196 0.240 0.260 0.281 0.325  2825 1.001
+p[1] 0.256   0.001 0.036 0.183 0.233 0.257 0.280 0.325   768 1.000
+p[2] 0.138   0.001 0.033 0.074 0.116 0.138 0.161 0.200   883 1.000
+p[3] 0.148   0.001 0.031 0.087 0.126 0.149 0.170 0.207   892 1.000
+p[4] 0.198   0.003 0.081 0.063 0.139 0.191 0.252 0.371   650 1.001
+p[5] 0.260   0.001 0.031 0.196 0.238 0.260 0.281 0.319  2728 1.000
 
-Samples were drawn using NUTS(diag_e) at Mon Oct  6 15:56:25 2025.
+Samples were drawn using NUTS(diag_e) at Mon Oct  6 23:54:56 2025.
 For each parameter, n_eff is a crude measure of effective sample size,
 and Rhat is the potential scale reduction factor on split chains (at 
 convergence, Rhat=1).</code></pre>
@@ -1085,41 +1086,39 @@ other attached packages:
 [16] cowplot_1.2.0          arrow_21.0.0.1         reshape2_1.4.4        
 [19] pins_1.4.1             marginaleffects_0.30.0 janitor_2.2.1         
 [22] here_1.0.1             readxl_1.4.5           stringr_1.5.1         
-[25] dplyr_1.1.4           
+[25] dplyr_1.1.4            rstan_2.32.7           StanHeaders_2.32.10   
 
 loaded via a namespace (and not attached):
  [1] gridExtra_2.3         inline_0.3.21         rlang_1.1.6          
  [4] magrittr_2.0.3        snakecase_0.11.1      matrixStats_1.5.0    
  [7] compiler_4.5.0        loo_2.8.0             callr_3.7.6          
-[10] vctrs_0.6.5           crayon_1.5.3          pkgconfig_2.0.3      
-[13] shape_1.4.6.1         arrayhelpers_1.1-0    fastmap_1.2.0        
-[16] backports_1.5.0       labeling_0.4.3        utf8_1.2.5           
-[19] rmarkdown_2.30        tzdb_0.5.0            ps_1.9.1             
-[22] purrr_1.0.4           bit_4.6.0             xfun_0.52            
-[25] jsonlite_2.0.0        broom_1.0.10          R6_2.6.1             
-[28] StanHeaders_2.32.10   stringi_1.8.7         RColorBrewer_1.1-3   
-[31] parallelly_1.44.0     boot_1.3-31           lubridate_1.9.4      
-[34] cellranger_1.1.0      rstan_2.32.7          assertthat_0.2.1     
-[37] knitr_1.50            readr_2.1.5           bayesplot_1.12.0     
-[40] Matrix_1.6-5          igraph_2.1.4          timechange_0.3.0     
-[43] tidyselect_1.2.1      rstudioapi_0.17.1     abind_1.4-8          
-[46] yaml_2.3.10           codetools_0.2-20      curl_6.2.2           
-[49] processx_3.8.6        pkgbuild_1.4.7        listenv_0.9.1        
-[52] lattice_0.22-7        tibble_3.2.1          plyr_1.8.9           
-[55] withr_3.0.2           bridgesampling_1.1-2  coda_0.19-4.1        
-[58] evaluate_1.0.3        RcppParallel_5.1.11-1 ggdist_3.3.3         
-[61] xml2_1.3.8            pillar_1.10.2         tensorA_0.36.2.1     
-[64] stats4_4.5.0          checkmate_2.3.3       renv_1.0.7           
-[67] distributional_0.5.0  generics_0.1.4        vroom_1.6.5          
-[70] rprojroot_2.0.4       hms_1.1.3             rstantools_2.5.0     
-[73] scales_1.4.0          globals_0.18.0        glue_1.8.0           
-[76] tools_4.5.0           data.table_1.17.2     mvtnorm_1.3-3        
-[79] tidygraph_1.3.1       grid_4.5.0            tidyr_1.3.1          
-[82] QuickJSR_1.8.1        nlme_3.1-168          cli_3.6.5            
-[85] svUnit_1.0.8          Brobdingnag_1.2-9     V8_8.0.0             
-[88] gtable_0.3.6          digest_0.6.37         htmlwidgets_1.6.4    
-[91] farver_2.1.2          htmltools_0.5.8.1     lifecycle_1.0.4      
-[94] gridtext_0.1.5        bit64_4.6.0-1         MASS_7.3-60.0.1      </code></pre>
+[10] vctrs_0.6.5           shape_1.4.6.1         pkgconfig_2.0.3      
+[13] arrayhelpers_1.1-0    fastmap_1.2.0         backports_1.5.0      
+[16] labeling_0.4.3        rmarkdown_2.30        ps_1.9.1             
+[19] purrr_1.0.4           bit_4.6.0             xfun_0.52            
+[22] jsonlite_2.0.0        broom_1.0.10          R6_2.6.1             
+[25] stringi_1.8.7         RColorBrewer_1.1-3    parallelly_1.44.0    
+[28] boot_1.3-31           lubridate_1.9.4       cellranger_1.1.0     
+[31] assertthat_0.2.1      knitr_1.50            bayesplot_1.12.0     
+[34] Matrix_1.6-5          igraph_2.1.4          timechange_0.3.0     
+[37] tidyselect_1.2.1      rstudioapi_0.17.1     abind_1.4-8          
+[40] yaml_2.3.10           codetools_0.2-20      curl_6.2.2           
+[43] processx_3.8.6        listenv_0.9.1         pkgbuild_1.4.7       
+[46] lattice_0.22-7        tibble_3.2.1          plyr_1.8.9           
+[49] withr_3.0.2           bridgesampling_1.1-2  coda_0.19-4.1        
+[52] evaluate_1.0.3        RcppParallel_5.1.11-1 xml2_1.3.8           
+[55] ggdist_3.3.3          pillar_1.10.2         tensorA_0.36.2.1     
+[58] checkmate_2.3.3       renv_1.0.7            stats4_4.5.0         
+[61] distributional_0.5.0  generics_0.1.4        rprojroot_2.0.4      
+[64] rstantools_2.5.0      scales_1.4.0          globals_0.18.0       
+[67] glue_1.8.0            tools_4.5.0           data.table_1.17.2    
+[70] mvtnorm_1.3-3         tidygraph_1.3.1       grid_4.5.0           
+[73] tidyr_1.3.1           QuickJSR_1.8.1        nlme_3.1-168         
+[76] cli_3.6.5             svUnit_1.0.8          Brobdingnag_1.2-9    
+[79] V8_8.0.0              gtable_0.3.6          digest_0.6.37        
+[82] htmlwidgets_1.6.4     farver_2.1.2          htmltools_0.5.8.1    
+[85] lifecycle_1.0.4       gridtext_0.1.5        bit64_4.6.0-1        
+[88] MASS_7.3-60.0.1      </code></pre>
 </div>
 </div>
 </div>

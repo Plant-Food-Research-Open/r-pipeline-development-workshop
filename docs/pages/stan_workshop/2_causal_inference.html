@@ -295,6 +295,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
   <li><a href="#science-before-statistics" id="toc-science-before-statistics" class="nav-link" data-scroll-target="#science-before-statistics">Science before statistics</a></li>
+  <li><a href="#everything-everywhere-all-at-once" id="toc-everything-everywhere-all-at-once" class="nav-link" data-scroll-target="#everything-everywhere-all-at-once">Everything, everywhere, all at once</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -335,32 +336,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressWarnings</span>(</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">suppressPackageStartupMessages</span>({</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(dplyr)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(stringr)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(readxl)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(here)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(janitor)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(marginaleffects)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(pins)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(reshape2)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(arrow)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(cowplot)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(modelr)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(bnlearn)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(future)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(dagitty)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(cmdstanr)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(brms)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggdag)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(tidybayes)</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggtext)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(simDAG)</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>bayesplot<span class="sc">::</span><span class="fu">color_scheme_set</span>(<span class="st">"blue"</span>)                                   </span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">mc.cores =</span> <span class="dv">1</span>)                           </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(rstan)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(dplyr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(stringr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(readxl)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(here)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(janitor)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(marginaleffects)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(pins)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(reshape2)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(arrow)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(cowplot)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(modelr)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(bnlearn)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(future)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(dagitty)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(cmdstanr)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(brms)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggdag)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(tidybayes)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggtext)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(simDAG)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>bayesplot<span class="sc">::</span><span class="fu">color_scheme_set</span>(<span class="st">"blue"</span>)                                   </span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">mc.cores =</span> <span class="dv">1</span>)                           </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
@@ -823,10 +825,264 @@ generated quantities {
 </div>
 </div>
 <p><strong>Figure 2:</strong> Various regression approaches to estimate the Y ~ X relationship (simulated value -1.71). Coefficients on arrows represent the estimated magnitude and direction of relationships. Conditioning on the confounder (A) returns the simulated value.</p>
+</section>
+<section id="everything-everywhere-all-at-once" class="level1">
+<h1>Everything, everywhere, all at once</h1>
 <ul>
-<li>Without consideration of the causal structure underlying data, it is easy to draw incorrect conclusions.</li>
-<li>Below is a simple example using a simulated dataset with four variables (Y, X, A, B).</li>
+<li>Modeled as a series of structural equations that represent the data generating process.</li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Models</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Output</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Validation</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-4" role="tab" aria-controls="tabset-2-4" aria-selected="false">Coefficients</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-5" role="tab" aria-controls="tabset-2-5" aria-selected="false">Stan code</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: model_2</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Model</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>se_1 <span class="ot">&lt;-</span> <span class="fu">bf</span>(x <span class="sc">~</span> a,     <span class="at">family =</span> gaussian)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>se_2 <span class="ot">&lt;-</span> <span class="fu">bf</span>(y <span class="sc">~</span> x <span class="sc">+</span> a, <span class="at">family =</span> gaussian)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>se_3 <span class="ot">&lt;-</span> <span class="fu">bf</span>(b <span class="sc">~</span> x <span class="sc">+</span> y, <span class="at">family =</span> gaussian)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>mod_7 <span class="ot">&lt;-</span> <span class="fu">fit_brm</span>(se_1 <span class="sc">+</span> se_2 <span class="sc">+</span> se_3 <span class="sc">+</span> <span class="fu">set_rescor</span>(<span class="cn">FALSE</span>), <span class="st">"mod_7"</span>) <span class="co"># Full Luxury Bayesian Inference</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: MV(gaussian, gaussian, gaussian) 
+  Links: mu = identity; sigma = identity
+         mu = identity; sigma = identity
+         mu = identity; sigma = identity 
+Formula: x ~ a 
+         y ~ x + a 
+         b ~ x + y 
+   Data: sim_dat (Number of observations: 1000) 
+  Draws: 4 chains, each with iter = 4000; warmup = 2000; thin = 1;
+         total post-warmup draws = 8000
+
+Regression Coefficients:
+            Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+x_Intercept    11.94      0.16    11.62    12.27 1.00    11177     5534
+y_Intercept    12.32      0.43    11.50    13.15 1.00     6507     5784
+b_Intercept   -14.90      0.33   -15.55   -14.25 1.00     7304     6715
+x_a             3.60      0.02     3.57     3.64 1.00    11852     5254
+y_x            -1.72      0.03    -1.78    -1.66 1.00     6399     5761
+y_a             1.15      0.12     0.93     1.39 1.00     6465     5641
+b_x             2.46      0.04     2.38     2.54 1.00     6581     5554
+b_y            -1.93      0.03    -1.99    -1.88 1.00     6501     5596
+
+Further Distributional Parameters:
+        Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sigma_x     1.98      0.04     1.89     2.06 1.00    11588     5687
+sigma_y     2.06      0.05     1.97     2.16 1.00    12391     5449
+sigma_b     1.98      0.04     1.90     2.07 1.00    12765     5688
+
+Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div>
+
+</div>
+<div class="cell quarto-layout-panel" data-layout-ncol="3">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: center;">
+<p><img src="2_causal_inference_files/figure-html/validation_2-1.png" class="img-fluid" width="384"></p>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: center;">
+<p><img src="2_causal_inference_files/figure-html/validation_2-2.png" class="img-fluid" width="384"></p>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: center;">
+<p><img src="2_causal_inference_files/figure-html/validation_2-3.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-2-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-4-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: coefficients_2</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_7)<span class="sc">$</span>fixed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              Estimate  Est.Error    l-95% CI   u-95% CI     Rhat  Bulk_ESS
+x_Intercept  11.941566 0.16427945  11.6190900  12.267412 1.000503 11176.576
+y_Intercept  12.318854 0.42500044  11.4977875  13.148660 1.000337  6507.183
+b_Intercept -14.898405 0.33399696 -15.5460275 -14.252475 1.001071  7304.193
+x_a           3.604818 0.01547007   3.5742700   3.635172 1.000459 11851.957
+y_x          -1.718194 0.03241209  -1.7819045  -1.655407 1.000254  6399.394
+y_a           1.154741 0.11782460   0.9270995   1.387789 1.000202  6464.990
+b_x           2.456469 0.04152228   2.3753800   2.538481 1.001028  6580.521
+b_y          -1.933204 0.02941317  -1.9907715  -1.875850 1.000845  6500.644
+            Tail_ESS
+x_Intercept 5533.619
+y_Intercept 5784.378
+b_Intercept 6714.671
+x_a         5253.892
+y_x         5761.419
+y_a         5641.095
+b_x         5554.106
+b_y         5596.162</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-2-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-5-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: stan_2</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make_stancode</span>(se_1 <span class="sc">+</span> se_2 <span class="sc">+</span> se_3 <span class="sc">+</span> <span class="fu">set_rescor</span>(<span class="cn">FALSE</span>), <span class="at">data =</span> sim_dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>// generated with brms 2.22.0
+functions {
+}
+data {
+  int&lt;lower=1&gt; N;  // total number of observations
+  int&lt;lower=1&gt; N_x;  // number of observations
+  vector[N_x] Y_x;  // response variable
+  int&lt;lower=1&gt; K_x;  // number of population-level effects
+  matrix[N_x, K_x] X_x;  // population-level design matrix
+  int&lt;lower=1&gt; Kc_x;  // number of population-level effects after centering
+  int&lt;lower=1&gt; N_y;  // number of observations
+  vector[N_y] Y_y;  // response variable
+  int&lt;lower=1&gt; K_y;  // number of population-level effects
+  matrix[N_y, K_y] X_y;  // population-level design matrix
+  int&lt;lower=1&gt; Kc_y;  // number of population-level effects after centering
+  int&lt;lower=1&gt; N_b;  // number of observations
+  vector[N_b] Y_b;  // response variable
+  int&lt;lower=1&gt; K_b;  // number of population-level effects
+  matrix[N_b, K_b] X_b;  // population-level design matrix
+  int&lt;lower=1&gt; Kc_b;  // number of population-level effects after centering
+  int prior_only;  // should the likelihood be ignored?
+}
+transformed data {
+  matrix[N_x, Kc_x] Xc_x;  // centered version of X_x without an intercept
+  vector[Kc_x] means_X_x;  // column means of X_x before centering
+  matrix[N_y, Kc_y] Xc_y;  // centered version of X_y without an intercept
+  vector[Kc_y] means_X_y;  // column means of X_y before centering
+  matrix[N_b, Kc_b] Xc_b;  // centered version of X_b without an intercept
+  vector[Kc_b] means_X_b;  // column means of X_b before centering
+  for (i in 2:K_x) {
+    means_X_x[i - 1] = mean(X_x[, i]);
+    Xc_x[, i - 1] = X_x[, i] - means_X_x[i - 1];
+  }
+  for (i in 2:K_y) {
+    means_X_y[i - 1] = mean(X_y[, i]);
+    Xc_y[, i - 1] = X_y[, i] - means_X_y[i - 1];
+  }
+  for (i in 2:K_b) {
+    means_X_b[i - 1] = mean(X_b[, i]);
+    Xc_b[, i - 1] = X_b[, i] - means_X_b[i - 1];
+  }
+}
+parameters {
+  vector[Kc_x] b_x;  // regression coefficients
+  real Intercept_x;  // temporary intercept for centered predictors
+  real&lt;lower=0&gt; sigma_x;  // dispersion parameter
+  vector[Kc_y] b_y;  // regression coefficients
+  real Intercept_y;  // temporary intercept for centered predictors
+  real&lt;lower=0&gt; sigma_y;  // dispersion parameter
+  vector[Kc_b] b_b;  // regression coefficients
+  real Intercept_b;  // temporary intercept for centered predictors
+  real&lt;lower=0&gt; sigma_b;  // dispersion parameter
+}
+transformed parameters {
+  real lprior = 0;  // prior contributions to the log posterior
+  lprior += student_t_lpdf(Intercept_x | 3, 47.9, 14.5);
+  lprior += student_t_lpdf(sigma_x | 3, 0, 14.5)
+    - 1 * student_t_lccdf(0 | 3, 0, 14.5);
+  lprior += student_t_lpdf(Intercept_y | 3, -58.4, 20);
+  lprior += student_t_lpdf(sigma_y | 3, 0, 20)
+    - 1 * student_t_lccdf(0 | 3, 0, 20);
+  lprior += student_t_lpdf(Intercept_b | 3, 215.6, 74.1);
+  lprior += student_t_lpdf(sigma_b | 3, 0, 74.1)
+    - 1 * student_t_lccdf(0 | 3, 0, 74.1);
+}
+model {
+  // likelihood including constants
+  if (!prior_only) {
+    target += normal_id_glm_lpdf(Y_x | Xc_x, Intercept_x, b_x, sigma_x);
+    target += normal_id_glm_lpdf(Y_y | Xc_y, Intercept_y, b_y, sigma_y);
+    target += normal_id_glm_lpdf(Y_b | Xc_b, Intercept_b, b_b, sigma_b);
+  }
+  // priors including constants
+  target += lprior;
+}
+generated quantities {
+  // actual population-level intercept
+  real b_x_Intercept = Intercept_x - dot_product(means_X_x, b_x);
+  // actual population-level intercept
+  real b_y_Intercept = Intercept_y - dot_product(means_X_y, b_y);
+  // actual population-level intercept
+  real b_b_Intercept = Intercept_b - dot_product(means_X_b, b_b);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>basic_dag <span class="ot">&lt;-</span> <span class="fu">dagify</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  Y <span class="sc">~</span> X <span class="sc">+</span> A,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  X <span class="sc">~</span> A,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  B <span class="sc">~</span> X <span class="sc">+</span> Y,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">exposure =</span> <span class="st">"X"</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcome =</span> <span class="st">"Y"</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">coords =</span> <span class="fu">list</span>(</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">c</span>(<span class="at">X =</span> <span class="dv">1</span>, <span class="at">Y =</span> <span class="dv">3</span>, <span class="at">A =</span> <span class="dv">2</span>, <span class="at">B =</span> <span class="dv">2</span>),</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">c</span>(<span class="at">X =</span> <span class="dv">1</span>, <span class="at">Y =</span> <span class="dv">1</span>, <span class="at">A =</span> <span class="dv">2</span>, <span class="at">B =</span> <span class="dv">0</span>)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>basic_dag_plot <span class="ot">&lt;-</span> basic_dag <span class="sc">|&gt;</span> </span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tidy_dagitty</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">var_type =</span> <span class="fu">case_when</span>(</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    name <span class="sc">==</span> <span class="st">"X"</span> <span class="sc">~</span> <span class="st">"Exposure"</span>,</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    name <span class="sc">==</span> <span class="st">"Y"</span> <span class="sc">~</span> <span class="st">"Outcome"</span>,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(name, <span class="st">"A"</span>) <span class="sc">~</span> <span class="st">"Confounder"</span>,</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(name, <span class="st">"B"</span>) <span class="sc">~</span> <span class="st">"Collider"</span></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">|&gt;</span> </span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">var_label =</span> <span class="fu">case_match</span>(name,</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"X"</span> <span class="sc">~</span> <span class="st">"Treatment"</span>,</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Y"</span> <span class="sc">~</span> <span class="st">"Outcome"</span>,</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"A"</span> <span class="sc">~</span> <span class="st">""</span>,</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"B"</span> <span class="sc">~</span> <span class="st">""</span></span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(basic_dag_plot, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">xend =</span> xend, <span class="at">yend =</span> yend)) <span class="sc">+</span></span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_dag_edges</span>() <span class="sc">+</span></span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_dag_point</span>(<span class="fu">aes</span>(<span class="at">color =</span> var_type), <span class="at">size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_richtext</span>(</span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> name), <span class="at">fontface =</span> <span class="st">"bold"</span>, <span class="at">color =</span> <span class="st">"white"</span>,</span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">label.color =</span> <span class="cn">NA</span>,</span>
+<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">label.padding =</span> grid<span class="sc">::</span><span class="fu">unit</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="st">"pt"</span>)</span>
+<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_dag_text</span>(</span>
+<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">filter</span>(basic_dag_plot, var_type <span class="sc">!=</span> <span class="st">"Confounder"</span>), <span class="fu">aes</span>(<span class="at">label =</span> var_label), </span>
+<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">nudge_y =</span> <span class="sc">-</span><span class="fl">0.25</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>, <span class="at">size.unit =</span> <span class="st">"pt"</span></span>
+<span id="cb27-39"><a href="#cb27-39" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb27-40"><a href="#cb27-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_dag_text</span>(</span>
+<span id="cb27-41"><a href="#cb27-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">filter</span>(basic_dag_plot, var_type <span class="sc">==</span> <span class="st">"Confounder"</span>), <span class="fu">aes</span>(<span class="at">label =</span> var_label), </span>
+<span id="cb27-42"><a href="#cb27-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">nudge_y =</span> <span class="fl">0.26</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>, <span class="at">size.unit =</span> <span class="st">"pt"</span></span>
+<span id="cb27-43"><a href="#cb27-43" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb27-44"><a href="#cb27-44" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_text</span>(</span>
+<span id="cb27-45"><a href="#cb27-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> (x <span class="sc">+</span> xend) <span class="sc">/</span> <span class="dv">2</span>, <span class="at">y =</span> (y <span class="sc">+</span> yend <span class="sc">+</span> <span class="fl">0.4</span>) <span class="sc">/</span> <span class="dv">2</span>, <span class="at">label =</span>  <span class="fu">c</span>(<span class="st">"3.60"</span>,<span class="st">"1.15"</span>,<span class="st">""</span>,<span class="st">"2.45"</span>,<span class="st">"-1.72"</span>,<span class="st">"-1.93"</span>)),</span>
+<span id="cb27-46"><a href="#cb27-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">5</span></span>
+<span id="cb27-47"><a href="#cb27-47" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb27-48"><a href="#cb27-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#44AA99"</span>, <span class="st">"#6699CC"</span>, <span class="st">"#882255"</span>,<span class="st">"#999933"</span>), <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb27-49"><a href="#cb27-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dag</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_causal_inference_files/figure-html/dag-sem-dag-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 
 
 </section>

@@ -21,16 +21,16 @@ Some familiarity with R. Statistical/machine learning concepts such as cross-val
 
 ### Coordinators
 
-- Jingjing Zhang (Jingjing.Zhang@plantandfood.co.nz)
-- Lindy Guo (Lindy.Guo@plantandfood.co.nz)
-- Hana Liang (Yongqi.Liang@plantandfood.co.nz)
-- James Bristow (James.Bristow@plantandfood.co.nz)
+-   Jingjing Zhang (Jingjing.Zhang\@plantandfood.co.nz)
+-   Lindy Guo (Lindy.Guo\@plantandfood.co.nz)
+-   Hana Liang (Yongqi.Liang\@plantandfood.co.nz)
+-   James Bristow (James.Bristow\@plantandfood.co.nz)
 
 ## Stan and Causal Inference
 
 ### Introduction
 
-This workshop provides an overview of Bayesian modelling and causal inference using *brms* and *cmdstanr*. 
+This workshop provides an overview of Bayesian modelling and causal inference using *brms* and *cmdstanr*.
 
 We include a light introduction to MLOps principles for model deployment using the *vetiver* and *plumber* R packages. We demonstrate containerisation of models using Docker for deployment onto Kubernetes.
 
@@ -40,6 +40,5 @@ Some familiarity with R. Statistical concepts such as priors, posteriors, and Ba
 
 ### Coordinators
 
-- Tom Moore (Tom.Moore@plantandfood.co.nz)
-- James Bristow (James.Bristow@plantandfood.co.nz)
-
+-   Tom Moore (Tom.Moore\@plantandfood.co.nz)
+-   James Bristow (James.Bristow\@plantandfood.co.nz)
