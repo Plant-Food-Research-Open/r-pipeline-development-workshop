@@ -21,7 +21,7 @@ In this section, we will demonstrate how one may combine *vetiver* and
 *plumber* with *Docker* and *Kubernetes* to enable Machine Learning
 Operations (MLOps) practices. MLOps is the practice of combining machine
 learning (ML) development with software engineering and operational
-practices. It applies principles from DevOps—like continuous
+practices. It applies principles from DevOps like continuous
 integration, continuous delivery (CI/CD), version control, and
 monitoring to the lifecycle of ML models to make ML systems
 reproducible, scalable, and reliable. Models can then be updated safely,
@@ -135,7 +135,7 @@ gompertz_model
 # Model versioning, sharing, and deployment
 
 We will demonstrate how to perform model versioning, sharing, and
-deployment using a combination of *pins*, *vetiver*, and *plumber*. [We'll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called "objects", organized in "buckets". It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html) In this example, we will first specify our S3 bucket.
+deployment using a combination of *pins*, *vetiver*, and *plumber*. [We'll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called "objects", organised in "buckets". It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html) In this example, we will first specify our S3 bucket.
 
 ```{r stan-s3-board, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 board <- board_s3(
@@ -206,7 +206,7 @@ pr(here("app", "api", "plumber.R")) |>
 
 # Docker
 
-[Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container](https://www.docker.com/). This ensures that the application runs consistently across different environments — whether on a developer's laptop, a testing server, or a production cloud environment. Docker helps developers "build once, run anywhere" without worrying about environment mismatches.
+[Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container](https://www.docker.com/). This ensures that the application runs consistently across different environments, whether on a developer's laptop, a testing server, or a production cloud environment. Docker helps developers "build once, run anywhere" without worrying about environment mismatches.
 
 Our objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:
 

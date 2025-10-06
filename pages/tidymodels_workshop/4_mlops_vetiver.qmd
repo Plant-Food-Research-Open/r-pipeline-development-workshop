@@ -21,7 +21,7 @@ In this section, we will demonstrate how one may combine *vetiver* and
 *plumber* with *Docker* and *Kubernetes* to enable Machine Learning
 Operations (MLOps) practices. MLOps is the practice of combining machine
 learning (ML) development with software engineering and operational
-practices. It applies principles from DevOps—like continuous
+practices. It applies principles from DevOps like continuous
 integration, continuous delivery (CI/CD), version control, and
 monitoring to the lifecycle of ML models to make ML systems
 reproducible, scalable, and reliable. Models can then be updated safely,
@@ -188,7 +188,7 @@ quite poor.
 We will demonstrate how to perform model versioning, sharing, and
 deployment using a combination of *pins*, *vetiver*, and *plumber*.
 [We'll store everything in S3. Amazon S3 (Simple Storage Service) is
-cloud storage for files, called "objects", organized in "buckets". It
+cloud storage for files, called "objects", organised in "buckets". It
 offers scalable, secure, and flexible storage with features like
 versioning, encryption, and programmatic access via URLs or AWS
 tools.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html)
@@ -304,7 +304,7 @@ pr(here("app", "api", "plumber.R")) |>
 package an application along with all its dependencies, libraries, and
 configuration files into a single unit called a
 container](https://www.docker.com/). This ensures that the application
-runs consistently across different environments — whether on a
+runs consistently across different environments, whether on a
 developer's laptop, a testing server, or a production cloud environment.
 Docker helps developers "build once, run anywhere" without worrying
 about environment mismatches.

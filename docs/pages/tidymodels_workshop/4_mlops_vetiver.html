@@ -346,7 +346,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>In this section, we will demonstrate how one may combine <em>vetiver</em> and <em>plumber</em> with <em>Docker</em> and <em>Kubernetes</em> to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps—like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time</p>
+<p>In this section, we will demonstrate how one may combine <em>vetiver</em> and <em>plumber</em> with <em>Docker</em> and <em>Kubernetes</em> to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time</p>
 <p>As a reminder:</p>
 <ul>
 <li><a href="https://rstudio.github.io/vetiver-r/">vetiver: For model versioning, sharing, and deployment</a></li>
@@ -490,7 +490,7 @@ Figure&nbsp;1: Predicted and observed Miles per Gallon for testing set using con
 </section>
 <section id="model-versioning-sharing-and-deployment" class="level1">
 <h1>Model versioning, sharing, and deployment</h1>
-<p>We will demonstrate how to perform model versioning, sharing, and deployment using a combination of <em>pins</em>, <em>vetiver</em>, and <em>plumber</em>. <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html">We’ll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called “objects”, organized in “buckets”. It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.</a> In this example, we will first specify our S3 bucket.</p>
+<p>We will demonstrate how to perform model versioning, sharing, and deployment using a combination of <em>pins</em>, <em>vetiver</em>, and <em>plumber</em>. <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html">We’ll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called “objects”, organised in “buckets”. It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.</a> In this example, we will first specify our S3 bucket.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>board <span class="ot">&lt;-</span> <span class="fu">board_s3</span>(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data"</span>, </span>
@@ -597,7 +597,7 @@ Plots
 </section>
 <section id="docker" class="level1">
 <h1>Docker</h1>
-<p><a href="https://www.docker.com/">Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container</a>. This ensures that the application runs consistently across different environments — whether on a developer’s laptop, a testing server, or a production cloud environment. Docker helps developers “build once, run anywhere” without worrying about environment mismatches.</p>
+<p><a href="https://www.docker.com/">Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container</a>. This ensures that the application runs consistently across different environments, whether on a developer’s laptop, a testing server, or a production cloud environment. Docker helps developers “build once, run anywhere” without worrying about environment mismatches.</p>
 <p>Our objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:</p>
 <ol type="1">
 <li><a href="https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/blob/main/dockerfiles/shiny/Dockerfile.0.1.0">We have a Dockerfile which contains a sequence of steps needed to build a Docker image. We copy our code from the R workshop repo into the Docker image (including the plumber web application code).</a></li>

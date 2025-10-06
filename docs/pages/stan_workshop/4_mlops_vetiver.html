@@ -336,7 +336,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>In this section, we will demonstrate how one may combine <em>vetiver</em> and <em>plumber</em> with <em>Docker</em> and <em>Kubernetes</em> to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps—like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time</p>
+<p>In this section, we will demonstrate how one may combine <em>vetiver</em> and <em>plumber</em> with <em>Docker</em> and <em>Kubernetes</em> to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time</p>
 <p>As a reminder:</p>
 <ul>
 <li><a href="https://rstudio.github.io/vetiver-r/">vetiver: For model versioning, sharing, and deployment</a></li>
@@ -565,7 +565,7 @@ Plots
 </section>
 <section id="docker" class="level1">
 <h1>Docker</h1>
-<p><a href="https://www.docker.com/">Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container</a>. This ensures that the application runs consistently across different environments — whether on a developer’s laptop, a testing server, or a production cloud environment. Docker helps developers “build once, run anywhere” without worrying about environment mismatches.</p>
+<p><a href="https://www.docker.com/">Docker is a containerisation technology that allows developers to package an application along with all its dependencies, libraries, and configuration files into a single unit called a container</a>. This ensures that the application runs consistently across different environments, whether on a developer’s laptop, a testing server, or a production cloud environment. Docker helps developers “build once, run anywhere” without worrying about environment mismatches.</p>
 <p>Our objective is to package up our plumber web application and model within a Docker container for subsequent deployment. In brief:</p>
 <ol type="1">
 <li><a href="https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/blob/main/dockerfiles/shiny/Dockerfile.0.1.0">We have a Dockerfile which contains a sequence of steps needed to build a Docker image. We copy our code from the R workshop repo into the Docker image (including the plumber web application code).</a></li>
