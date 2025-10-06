@@ -10,13 +10,23 @@ link-citations: true
 editor: 
   markdown: 
     wrap: 72
+execute:
+  warning: false
+  message: false
 ---
 
 # Introduction
 
-In this section, we will demonstrate how one may train a machine learning model and tune its hyper-parameters using the *tidymodels* framework. [For more information, click this link.](https://www.tidymodels.org/)  
+In this section, we will demonstrate how one may train a machine
+learning model and tune its hyper-parameters using the *tidymodels*
+framework. [For more information, click this
+link.](https://www.tidymodels.org/)
 
-[We will combine *tidymodels* with H2O.](https://h2o.ai/) H2O is an open-source, distributed machine learning platform designed for scalable and fast data analysis. It’s widely used for building predictive models on large datasets and supports both traditional machine learning algorithms and modern AI methods.
+[We will combine *tidymodels* with H2O.](https://h2o.ai/) H2O is an
+open-source, distributed machine learning platform designed for scalable
+and fast data analysis. It’s widely used for building predictive models
+on large datasets and supports both traditional machine learning
+algorithms and modern AI methods.
 
 We first load all required dependencies.
 
@@ -64,7 +74,9 @@ source(here("R/probably_vetiver.R"))
 
 # Data
 
-We will next load an example dataset. [For this tutorial, we will use the mtcars dataset.](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html)
+We will next load an example dataset. [For this tutorial, we will use
+the mtcars
+dataset.](https://cran.r-project.org/web/packages/explore/vignettes/explore-mtcars.html)
 
 ```{r load-h2o-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
@@ -72,7 +84,8 @@ data("mtcars")
 head(mtcars)
 ```
 
-We will next perform a 80-20 train-test data split. We will train our model on 80% of the data, and assess it against the other 20%.
+We will next perform a 80-20 train-test data split. We will train our
+model on 80% of the data, and assess it against the other 20%.
 
 ```{r split-h2o-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 data_split <- mtcars |>
@@ -86,11 +99,12 @@ data_test  <- testing(data_split)
 head(data_train)
 ```
 
-Next, we will create a data preprocessing recipe using the [recipes package](https://recipes.tidymodels.org/). This recipe will:
+Next, we will create a data preprocessing recipe using the [recipes
+package](https://recipes.tidymodels.org/). This recipe will:
 
-- Drop zero and near zero-variance columns.
-- Normalise all numeric columns using Z-standardisation.
-- Impute missing data using k nearest neighbor imputation.
+-   Drop zero and near zero-variance columns.
+-   Normalise all numeric columns using Z-standardisation.
+-   Impute missing data using k nearest neighbor imputation.
 
 ```{r process-h2o-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 training_recipe <- recipe(data_train) |>
@@ -104,7 +118,11 @@ training_recipe <- recipe(data_train) |>
 
 # AutoML
 
-Rather than using *workflowsets* and various R-based models, we will instead launch an H2O server and execute its supported AutoML algorithm. We will only run this algorithm for a maximum of 20 seconds for demonstration purposes. You would typically want to run it for longer depending on the nature of the dataset.
+Rather than using *workflowsets* and various R-based models, we will
+instead launch an H2O server and execute its supported AutoML algorithm.
+We will only run this algorithm for a maximum of 20 seconds for
+demonstration purposes. You would typically want to run it for longer
+depending on the nature of the dataset.
 
 ```{r h2o-automl, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 h2o.init(max_mem_size = "512M", nthreads = 1)
@@ -125,7 +143,8 @@ extract_fit_parsnip(auto_fit)
 
 ## Results
 
-We next view the evaluation results of the AutoML algorithm, sorting by predictive accuracy using the mean absolute error (MAE) metric.
+We next view the evaluation results of the AutoML algorithm, sorting by
+predictive accuracy using the mean absolute error (MAE) metric.
 
 ```{r h2o-automl-results, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 
@@ -134,7 +153,9 @@ rank_results(auto_fit) |>
   arrange(rank)
 ```
 
-The generalised linear models (GLMs) and gradient boosting machine (GBM) algorithms show promising results. We can next visualise the stacking ensemble member weights from H2O's AutoML algorithm. 
+The generalised linear models (GLMs) and gradient boosting machine (GBM)
+algorithms show promising results. We can next visualise the stacking
+ensemble member weights from H2O's AutoML algorithm.
 
 ```{r fig-h2o-importances, results = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: H20 AutoML model importances.
@@ -152,11 +173,15 @@ p <- auto_fit |>
 ggplotly(p)
 ```
 
-This plot shows that the GLM and GBM models are more heavily weighted in the ensemble than the other supported algorithms.
+This plot shows that the GLM and GBM models are more heavily weighted in
+the ensemble than the other supported algorithms.
 
 # Uncertainty Quantification
 
-Our AutoML model does not produce prediction intervals out-of-the-box. Hence, no in-built uncertainty quantification. We will use *probably* to conformalise the model to produce non-parametric prediction intervals using conformal inference.
+Our AutoML model does not produce prediction intervals out-of-the-box.
+Hence, no in-built uncertainty quantification. We will use *probably* to
+conformalise the model to produce non-parametric prediction intervals
+using conformal inference.
 
 ```{r h2o-conformalisation, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 patched_stack_regressor <- tidymodels_deployment$patch_tidymodel(auto_fit, training_recipe, data_train)
@@ -164,7 +189,8 @@ conformalised_regressor <- int_conformal_split(patched_stack_regressor, data_tra
 conformalised_regressor$training <- data_train
 ```
 
-We can view the predictions produced by the conformalised model, this time with prediction intervals included:
+We can view the predictions produced by the conformalised model, this
+time with prediction intervals included:
 
 ```{r h2o-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised model (95% prediction intervals).
@@ -194,11 +220,14 @@ intervals. Given a large enough testing dataset, we would expect roughly
 
 # Model Interpretation
 
-An AutoML model will be relatively black-box in nature. For this tutorial, we will demonstrate three functions offered by DALEX.
+An AutoML model will be relatively black-box in nature. For this
+tutorial, we will demonstrate three functions offered by DALEX.
 
 ## Partial Dependence
 
-We can next use a partial dependence plot (PDP) to visualise the effect of one or more features on Miles per Gallon for our model, while averaging out the effects of all other features.
+We can next use a partial dependence plot (PDP) to visualise the effect
+of one or more features on Miles per Gallon for our model, while
+averaging out the effects of all other features.
 
 ```{r fig-conformal-pdp, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Partial dependence plots for the AutoML model.
@@ -220,7 +249,9 @@ p <- model_profile(
 ggplotly(p)
 ```
 
-We see that smaller values of Displacement, Horsepower, and Weight typically have more Miles per Gallon. There is a similar trend for the number of Cylinders, with a drop-off at around 5 and 7 cylinders.
+We see that smaller values of Displacement, Horsepower, and Weight
+typically have more Miles per Gallon. There is a similar trend for the
+number of Cylinders, with a drop-off at around 5 and 7 cylinders.
 
 ## Residuals
 
@@ -238,12 +269,17 @@ p <- model_diagnostics(
 ggplotly(p)
 ```
 
-We see an S-shaped curve, suggesting that there is bias in the predictions. There is evidence of over-prediction for Miles per Gallon between 10 and 17, and between 21 and 28. Conversely, there is evidence of under-prediction for Miles per Gallon over 28 and between 17 and 22.
+We see an S-shaped curve, suggesting that there is bias in the
+predictions. There is evidence of over-prediction for Miles per Gallon
+between 10 and 17, and between 21 and 28. Conversely, there is evidence
+of under-prediction for Miles per Gallon over 28 and between 17 and 22.
 
 # Model versioning, sharing, and deployment
 
-Finally, we will demonstrate how to perform model versioning, sharing, and
-deployment using a combination of *pins*, *vetiver*, and *plumber*. In this example, we will first save our AutoML model to a local temporary directory using *pins* and *vetiver*
+Finally, we will demonstrate how to perform model versioning, sharing,
+and deployment using a combination of *pins*, *vetiver*, and *plumber*.
+In this example, we will first save our AutoML model to a local
+temporary directory using *pins* and *vetiver*
 
 ```{r h2o-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 board <- board_temp()
@@ -251,7 +287,8 @@ v_model <- vetiver_model(conformalised_regressor, "automl_model")
 vetiver_pin_write(v_model, board = board)
 ```
 
-We will next load and interact with the saved model using a plumber web application.
+We will next load and interact with the saved model using a plumber web
+application.
 
 ```{r h2o-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 loaded_v <- board |> 
@@ -265,7 +302,7 @@ pr(here("app", "api", "plumber.R")) |>
 # Bonus: Pipelines with targets
 
 [The *targets* package](https://books.ropensci.org/targets/) is used to
-construct reproducible data/statistical science workflows in R. 
+construct reproducible data/statistical science workflows in R.
 
 To view the targets pipeline code, run the following:
 
@@ -282,5 +319,3 @@ tar_make(
   use_crew = TRUE
 )
 ```
-
-

@@ -42,4 +42,26 @@ spec:
               value: "8089"
             - name: MODEL_CARD_NAME
               value: random_forest_card
+        - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
+          imagePullPolicy: Always
+          name: brms-model
+          ports:
+            - containerPort: 8090
+              protocol: TCP
+          args:
+            - Rscript
+            - api/vetiver_deploy.R
+          env:
+            - name: S3_BUCKET
+              value: data
+            - name: AWS_ACCESS_KEY_ID
+              value: user
+            - name: AWS_SECRET_ACCESS_KEY
+              value: password
+            - name: S3_ENDPOINT_URL
+              value: http://r-pipelines:9000
+            - name: MODEL_NAME
+              value: brms_model
+            - name: MODEL_PORT
+              value: "8090"
       restartPolicy: Always

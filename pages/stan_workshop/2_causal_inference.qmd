@@ -10,30 +10,37 @@ link-citations: true
 editor: 
   markdown: 
     wrap: 72
+execute:
+  warning: false
+  message: false
 ---
 
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
-library(dplyr)
-library(stringr)
-library(readxl)
-library(here)
-library(janitor)
-library(marginaleffects)
-library(pins)
-library(reshape2)
-library(arrow)
-library(cowplot)
-library(modelr)
-library(bnlearn)
-library(future)
-library(dagitty)
-library(cmdstanr)
-library(brms)
-library(ggdag)
-library(tidybayes)
-library(ggtext)
-library(ggplot2)
-library(simDAG)
+suppressWarnings(
+  suppressPackageStartupMessages({
+  library(dplyr)
+  library(stringr)
+  library(readxl)
+  library(here)
+  library(janitor)
+  library(marginaleffects)
+  library(pins)
+  library(reshape2)
+  library(arrow)
+  library(cowplot)
+  library(modelr)
+  library(bnlearn)
+  library(future)
+  library(dagitty)
+  library(cmdstanr)
+  library(brms)
+  library(ggdag)
+  library(tidybayes)
+  library(ggtext)
+  library(ggplot2)
+  library(simDAG)
+  })
+)
 
 bayesplot::color_scheme_set("blue")                                   
 options(mc.cores = 1)                           

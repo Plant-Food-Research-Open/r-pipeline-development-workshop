@@ -27,7 +27,18 @@ spec:
                   name: port-8089
             path: /
             pathType: Prefix
+    - host: brms.model.r-pipelines.k8s.dev.pfr.co.nz
+      http:
+        paths:
+          - backend:
+              service:
+                name: r-pipelines-models
+                port:
+                  name: port-8090
+            path: /
+            pathType: Prefix
   tls:
     - hosts:
         - "random-forest.model.r-pipelines.k8s.dev.pfr.co.nz"
+        - "brms.model.r-pipelines.k8s.dev.pfr.co.nz"
       secretName: r-pipelines-models-tls-secret

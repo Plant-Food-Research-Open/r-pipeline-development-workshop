@@ -10,17 +10,73 @@ link-citations: true
 editor: 
   markdown: 
     wrap: 72
+execute:
+  warning: false
+  message: false
 ---
 
 # Introduction
 
-In this section, we will demonstrate how one may combine *vetiver* and *plumber* with *Docker* and *Kubernetes* to enable Machine Learning Operations (MLOps) practices. MLOps is the practice of combining machine learning (ML) development with software engineering and operational practices. It applies principles from DevOps—like continuous integration, continuous delivery (CI/CD), version control, and monitoring to the lifecycle of ML models to make ML systems reproducible, scalable, and reliable. Models can then be updated safely, deployed efficiently, and monitored for performance drift over time
+In this section, we will demonstrate how one may combine *vetiver* and
+*plumber* with *Docker* and *Kubernetes* to enable Machine Learning
+Operations (MLOps) practices. MLOps is the practice of combining machine
+learning (ML) development with software engineering and operational
+practices. It applies principles from DevOps—like continuous
+integration, continuous delivery (CI/CD), version control, and
+monitoring to the lifecycle of ML models to make ML systems
+reproducible, scalable, and reliable. Models can then be updated safely,
+deployed efficiently, and monitored for performance drift over time
 
 As a reminder:
 
-- [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
-- [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
+-   [vetiver: For model versioning, sharing, and
+    deployment](https://rstudio.github.io/vetiver-r/)
+-   [plumber: For creating light-weight web applications, and deploying
+    models as microservices](https://www.rplumber.io/)
 
 We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
 
 We first load all required dependencies.
+
+```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+suppressWarnings(
+  suppressPackageStartupMessages({
+    library(dplyr)
+    library(stringr)
+    library(here)
+    library(janitor)
+    library(pins)
+    library(vetiver)
+    library(modelr)
+    library(future)
+    library(paws.common)
+    library(cmdstanr)
+    library(brms)
+    library(paws.storage)
+    library(tidybayes)
+    library(plotly)
+    library(ggplot2)
+    library(simDAG)
+    library(rethinking)
+    library(forcats)
+  })
+)
+
+bayesplot::color_scheme_set("blue")                                   
+options(mc.cores = 1)                           
+```
+
+## Data and Methods
+
+We will load mussel data collected during Tom Moore's PhD.
+
+::: {.callout-tip title="Data" collapse="true"}
+```{r stan-data, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+
+df <- readr::read_csv(here("pages/stan_workshop/data/Mussel_df_15.01.20.csv"), show_col_types = FALSE) |>
+        dplyr::select(c(Length,Height,Width,Weight,Treatment,Macrophyte,Site))
+df <- df[complete.cases(df),]  
+
+head(df)
+```
+:::
