@@ -64,6 +64,7 @@ suppressWarnings(
     library(simDAG)
     library(rethinking)
     library(forcats)
+    library(htmlwidgets)
   })
 )
 
