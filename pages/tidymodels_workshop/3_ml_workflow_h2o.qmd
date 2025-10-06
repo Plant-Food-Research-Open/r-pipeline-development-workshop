@@ -192,7 +192,7 @@ conformalised_regressor$training <- data_train
 We can view the predictions produced by the conformalised model, this
 time with prediction intervals included:
 
-```{r h2o-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-h2o-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised model (95% prediction intervals).
 
 p <- conformalised_regressor |> 

@@ -351,6 +351,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><a href="https://rstudio.github.io/vetiver-r/">vetiver: For model versioning, sharing, and deployment</a></li>
 <li><a href="https://www.rplumber.io/">plumber: For creating light-weight web applications, and deploying models as microservices</a></li>
+<li><a href="https://pins.rstudio.com/">pins: For uploading, downloading, and sharing resources.</a></li>
 </ul>
 <p>We will elucidate upon <em>Docker</em> and <em>Kubernetes</em> in subsequent sections.</p>
 <p>We first load all required dependencies.</p>
@@ -373,26 +374,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],</span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  yardstick[rmse, mae, metric_set, metrics],</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  hardhat[tune],</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  workflows[workflow, add_recipe, add_model, fit],</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  stacks[stacks, add_candidates, blend_predictions, fit_members],</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  paws.common,</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  paws.storage,</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  plotly[ggplotly],</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  probably[int_conformal_split, cal_plot_regression],</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  plumber[pr, pr_run],</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  DALEXtra[explain_tidymodels],</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  glmnet,</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  zeallot[...],</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  targets[tar_make]</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">here</span>(<span class="st">"R/probably_vetiver.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  hardhat[tune], </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  htmlwidgets[saveWidget],</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  workflows[workflow, add_recipe, add_model, fit],</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, <span class="at">workflow_autoplot =</span> autoplot],</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  stacks[stacks, add_candidates, blend_predictions, fit_members],</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  paws.common,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  paws.storage,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  plotly[ggplotly],</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  probably[int_conformal_split, cal_plot_regression],</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  plumber[pr, pr_run],</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  DALEX[feature_importance, model_profile, predict_profile, model_diagnostics],</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  DALEXtra[explain_tidymodels],</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  glmnet,</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  zeallot[...],</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  targets[tar_make]</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">here</span>(<span class="st">"R/probably_vetiver.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="data" class="level1">
@@ -423,13 +425,13 @@ Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1</code></pre
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                    mpg cyl  disp  hp drat    wt  qsec vs am gear carb
-Merc 240D          24.4   4 146.7  62 3.69 3.190 20.00  1  0    4    2
-Mazda RX4 Wag      21.0   6 160.0 110 3.90 2.875 17.02  0  1    4    4
-Camaro Z28         13.3   8 350.0 245 3.73 3.840 15.41  0  0    3    4
-Ford Pantera L     15.8   8 351.0 264 4.22 3.170 14.50  0  1    5    4
-Lotus Europa       30.4   4  95.1 113 3.77 1.513 16.90  1  1    5    2
-Cadillac Fleetwood 10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4</code></pre>
+<pre><code>                   mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+Chrysler Imperial 14.7   8 440.0 230 3.23 5.345 17.42  0  0    3    4
+Hornet 4 Drive    21.4   6 258.0 110 3.08 3.215 19.44  1  0    3    1
+Merc 450SLC       15.2   8 275.8 180 3.07 3.780 18.00  0  0    3    3
+Maserati Bora     15.0   8 301.0 335 3.54 3.570 14.60  0  1    5    8
+Merc 450SL        17.3   8 275.8 180 3.07 3.730 17.60  0  0    3    3
+Duster 360        14.3   8 360.0 245 3.21 3.570 15.84  0  0    3    4</code></pre>
 </div>
 </div>
 <p>Next, we will create a data preprocessing recipe using the <a href="https://recipes.tidymodels.org/">recipes package</a>, which will:</p>
@@ -472,18 +474,23 @@ Cadillac Fleetwood 10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4</code></p
 </div>
 <p>We can view the predictions of the random forest model:</p>
 <div class="cell">
-<div class="cell-output-display">
-<div class="plotly html-widget html-fill-item" id="htmlwidget-725f4f89ddd57e0c46b9" style="width:100%;height:464px;"></div>
-<script type="application/json" data-for="htmlwidget-725f4f89ddd57e0c46b9">{"x":{"data":[{"x":[2.6200000000000001,2.3199999999999998,3.4399999999999999,3.46,3.5699999999999998,4.0700000000000003,3.4350000000000001],"y":[21,22.800000000000001,18.699999999999999,18.100000000000001,14.300000000000001,16.399999999999999,15.199999999999999],"text":["wt: 2.620<br />mpg: 21.0<br />colour: Observed MPG","wt: 2.320<br />mpg: 22.8<br />colour: Observed MPG","wt: 3.440<br />mpg: 18.7<br />colour: Observed MPG","wt: 3.460<br />mpg: 18.1<br />colour: Observed MPG","wt: 3.570<br />mpg: 14.3<br />colour: Observed MPG","wt: 4.070<br />mpg: 16.4<br />colour: Observed MPG","wt: 3.435<br />mpg: 15.2<br />colour: Observed MPG"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(248,118,109,1)"}},"hoveron":"points","name":"Observed MPG","legendgroup":"Observed MPG","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[2.6200000000000001,2.3199999999999998,3.4399999999999999,3.46,3.5699999999999998,4.0700000000000003,3.4350000000000001],"y":[20.577703333333332,26.345283809523778,17.522102142857126,20.030527142857125,14.855233333333322,16.154142142857136,17.465548809523799],"text":["wt: 2.620<br />.pred: 20.57770<br />colour: Predicted MPG","wt: 2.320<br />.pred: 26.34528<br />colour: Predicted MPG","wt: 3.440<br />.pred: 17.52210<br />colour: Predicted MPG","wt: 3.460<br />.pred: 20.03053<br />colour: Predicted MPG","wt: 3.570<br />.pred: 14.85523<br />colour: Predicted MPG","wt: 4.070<br />.pred: 16.15414<br />colour: Predicted MPG","wt: 3.435<br />.pred: 17.46555<br />colour: Predicted MPG"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,191,196,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,191,196,1)"}},"hoveron":"points","name":"Predicted MPG","legendgroup":"Predicted MPG","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[2.3199999999999998,2.6200000000000001,3.4350000000000001,3.4399999999999999,3.46,3.5699999999999998,4.0700000000000003,4.0700000000000003,4.0700000000000003,3.5699999999999998,3.46,3.4399999999999999,3.4350000000000001,2.6200000000000001,2.3199999999999998,2.3199999999999998],"y":[23.532370952380838,17.764790476190392,14.652635952380859,14.709189285714185,17.217614285714184,12.042320476190381,13.341229285714196,13.341229285714196,18.967055000000077,17.668146190476264,22.843440000000065,20.335015000000066,20.27846166666674,23.390616190476273,29.158196666666718,23.532370952380838],"text":["wt: 2.320<br />mpg: 22.8<br />colour: Predicted MPG<br />.pred_lower: 23.53237<br />.pred_upper: 29.15820","wt: 2.620<br />mpg: 21.0<br />colour: Predicted MPG<br />.pred_lower: 17.76479<br />.pred_upper: 23.39062","wt: 3.435<br />mpg: 15.2<br />colour: Predicted MPG<br />.pred_lower: 14.65264<br />.pred_upper: 20.27846","wt: 3.440<br />mpg: 18.7<br />colour: Predicted MPG<br />.pred_lower: 14.70919<br />.pred_upper: 20.33502","wt: 3.460<br />mpg: 18.1<br />colour: Predicted MPG<br />.pred_lower: 17.21761<br />.pred_upper: 22.84344","wt: 3.570<br />mpg: 14.3<br />colour: Predicted MPG<br />.pred_lower: 12.04232<br />.pred_upper: 17.66815","wt: 4.070<br />mpg: 16.4<br />colour: Predicted MPG<br />.pred_lower: 13.34123<br />.pred_upper: 18.96706","wt: 4.070<br />mpg: 16.4<br />colour: Predicted MPG<br />.pred_lower: 13.34123<br />.pred_upper: 18.96706","wt: 4.070<br />mpg: 16.4<br />colour: Predicted MPG<br />.pred_lower: 13.34123<br />.pred_upper: 18.96706","wt: 3.570<br />mpg: 14.3<br />colour: Predicted MPG<br />.pred_lower: 12.04232<br />.pred_upper: 17.66815","wt: 3.460<br />mpg: 18.1<br />colour: Predicted MPG<br />.pred_lower: 17.21761<br />.pred_upper: 22.84344","wt: 3.440<br />mpg: 18.7<br />colour: Predicted MPG<br />.pred_lower: 14.70919<br />.pred_upper: 20.33502","wt: 3.435<br />mpg: 15.2<br />colour: Predicted MPG<br />.pred_lower: 14.65264<br />.pred_upper: 20.27846","wt: 2.620<br />mpg: 21.0<br />colour: Predicted MPG<br />.pred_lower: 17.76479<br />.pred_upper: 23.39062","wt: 2.320<br />mpg: 22.8<br />colour: Predicted MPG<br />.pred_lower: 23.53237<br />.pred_upper: 29.15820","wt: 2.320<br />mpg: 22.8<br />colour: Predicted MPG<br />.pred_lower: 23.53237<br />.pred_upper: 29.15820"],"type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,191,196,0.2)","dash":"solid"},"fill":"toself","fillcolor":"rgba(51,51,51,0.2)","hoveron":"points","name":"Predicted MPG","legendgroup":"Predicted MPG","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.228310502283104,"r":7.3059360730593621,"b":40.182648401826491,"l":37.260273972602747},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[2.2324999999999999,4.1575000000000006],"tickmode":"array","ticktext":["2.5","3.0","3.5","4.0"],"tickvals":[2.5,3,3.5,4],"categoryorder":"array","categoryarray":["2.5","3.0","3.5","4.0"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"Weight","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[11.186526666666564,30.013990476190536],"tickmode":"array","ticktext":["15","20","25","30"],"tickvals":[15,20,25,30],"categoryorder":"array","categoryarray":["15","20","25","30"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"Miles per Gallon (MPG)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"title":{"text":"Variable","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"adec71458c0c":{"x":{},"y":{},"colour":{},"type":"scatter"},"adec1874b7b3":{"x":{},"y":{},"colour":{}},"adec710b89ce":{"x":{},"y":{},"colour":{},"ymin":{},"ymax":{}}},"cur_data":"adec71458c0c","visdat":{"adec71458c0c":["function (y) ","x"],"adec1874b7b3":["function (y) ","x"],"adec710b89ce":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
-<p>Predicted and observed Miles per Gallon for testing set using conformalised random forest (95% prediction intervals).</p>
+<div id="fig-tidymodels-conformalised-rf-plot" class="cell-output-display quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tidymodels-conformalised-rf-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-3e73056c29de86f6f51e" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-3e73056c29de86f6f51e">{"x":{"data":[{"x":[2.875,3.4399999999999999,3.1899999999999999,4.0700000000000003,5.25,1.615,1.5129999999999999],"y":[21,18.699999999999999,24.399999999999999,16.399999999999999,10.4,30.399999999999999,30.399999999999999],"text":["wt: 2.875<br />mpg: 21.0<br />colour: Observed MPG","wt: 3.440<br />mpg: 18.7<br />colour: Observed MPG","wt: 3.190<br />mpg: 24.4<br />colour: Observed MPG","wt: 4.070<br />mpg: 16.4<br />colour: Observed MPG","wt: 5.250<br />mpg: 10.4<br />colour: Observed MPG","wt: 1.615<br />mpg: 30.4<br />colour: Observed MPG","wt: 1.513<br />mpg: 30.4<br />colour: Observed MPG"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(248,118,109,1)"}},"hoveron":"points","name":"Observed MPG","legendgroup":"Observed MPG","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[2.875,3.4399999999999999,3.1899999999999999,4.0700000000000003,5.25,1.615,1.5129999999999999],"y":[20.415950000000031,16.336149999999996,23.57157952380949,16.304006666666659,13.75987999999994,29.212479523809467,24.687163333333327],"text":["wt: 2.875<br />.pred: 20.41595<br />colour: Predicted MPG","wt: 3.440<br />.pred: 16.33615<br />colour: Predicted MPG","wt: 3.190<br />.pred: 23.57158<br />colour: Predicted MPG","wt: 4.070<br />.pred: 16.30401<br />colour: Predicted MPG","wt: 5.250<br />.pred: 13.75988<br />colour: Predicted MPG","wt: 1.615<br />.pred: 29.21248<br />colour: Predicted MPG","wt: 1.513<br />.pred: 24.68716<br />colour: Predicted MPG"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,191,196,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,191,196,1)"}},"hoveron":"points","name":"Predicted MPG","legendgroup":"Predicted MPG","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1.5129999999999999,1.615,2.875,3.1899999999999999,3.4399999999999999,4.0700000000000003,5.25,5.25,5.25,4.0700000000000003,3.4399999999999999,3.1899999999999999,2.875,1.615,1.5129999999999999,1.5129999999999999],"y":[21.124089523809445,25.649405714285585,16.852876190476149,20.008505714285608,12.773076190476115,12.740932857142777,10.196806190476059,10.196806190476059,17.322953809523824,19.867080476190541,19.899223809523878,27.134653333333372,23.979023809523913,32.775553333333349,28.250237142857209,21.124089523809445],"text":["wt: 1.513<br />mpg: 30.4<br />colour: Predicted MPG<br />.pred_lower: 21.12409<br />.pred_upper: 28.25024","wt: 1.615<br />mpg: 30.4<br />colour: Predicted MPG<br />.pred_lower: 25.64941<br />.pred_upper: 32.77555","wt: 2.875<br />mpg: 21.0<br />colour: Predicted MPG<br />.pred_lower: 16.85288<br />.pred_upper: 23.97902","wt: 3.190<br />mpg: 24.4<br />colour: Predicted MPG<br />.pred_lower: 20.00851<br />.pred_upper: 27.13465","wt: 3.440<br />mpg: 18.7<br />colour: Predicted MPG<br />.pred_lower: 12.77308<br />.pred_upper: 19.89922","wt: 4.070<br />mpg: 16.4<br />colour: Predicted MPG<br />.pred_lower: 12.74093<br />.pred_upper: 19.86708","wt: 5.250<br />mpg: 10.4<br />colour: Predicted MPG<br />.pred_lower: 10.19681<br />.pred_upper: 17.32295","wt: 5.250<br />mpg: 10.4<br />colour: Predicted MPG<br />.pred_lower: 10.19681<br />.pred_upper: 17.32295","wt: 5.250<br />mpg: 10.4<br />colour: Predicted MPG<br />.pred_lower: 10.19681<br />.pred_upper: 17.32295","wt: 4.070<br />mpg: 16.4<br />colour: Predicted MPG<br />.pred_lower: 12.74093<br />.pred_upper: 19.86708","wt: 3.440<br />mpg: 18.7<br />colour: Predicted MPG<br />.pred_lower: 12.77308<br />.pred_upper: 19.89922","wt: 3.190<br />mpg: 24.4<br />colour: Predicted MPG<br />.pred_lower: 20.00851<br />.pred_upper: 27.13465","wt: 2.875<br />mpg: 21.0<br />colour: Predicted MPG<br />.pred_lower: 16.85288<br />.pred_upper: 23.97902","wt: 1.615<br />mpg: 30.4<br />colour: Predicted MPG<br />.pred_lower: 25.64941<br />.pred_upper: 32.77555","wt: 1.513<br />mpg: 30.4<br />colour: Predicted MPG<br />.pred_lower: 21.12409<br />.pred_upper: 28.25024","wt: 1.513<br />mpg: 30.4<br />colour: Predicted MPG<br />.pred_lower: 21.12409<br />.pred_upper: 28.25024"],"type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,191,196,0.2)","dash":"solid"},"fill":"toself","fillcolor":"rgba(51,51,51,0.2)","hoveron":"points","name":"Predicted MPG","legendgroup":"Predicted MPG","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.228310502283104,"r":7.3059360730593621,"b":40.182648401826491,"l":37.260273972602747},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1.3261499999999999,5.4368499999999997],"tickmode":"array","ticktext":["2","3","4","5"],"tickvals":[2,3,4,5],"categoryorder":"array","categoryarray":["2","3","4","5"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"Weight","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[9.0678688333331934,33.904490690476216],"tickmode":"array","ticktext":["10","15","20","25","30"],"tickvals":[10,15,20,25,30],"categoryorder":"array","categoryarray":["10","15","20","25","30"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"Miles per Gallon (MPG)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"title":{"text":"Variable","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"13ccc5c59ac66":{"x":{},"y":{},"colour":{},"type":"scatter"},"13ccc1da26d74":{"x":{},"y":{},"colour":{}},"13ccc553afd22":{"x":{},"y":{},"colour":{},"ymin":{},"ymax":{}}},"cur_data":"13ccc5c59ac66","visdat":{"13ccc5c59ac66":["function (y) ","x"],"13ccc1da26d74":["function (y) ","x"],"13ccc553afd22":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tidymodels-conformalised-rf-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Predicted and observed Miles per Gallon for testing set using conformalised random forest (95% prediction intervals).
+</figcaption>
+</figure>
 </div>
 </div>
 <p>Most of the testing observations fall within the 95% prediction intervals, though the predicted Miles per Gallon for larger weights are quite poor.</p>
 </section>
 <section id="model-versioning-sharing-and-deployment" class="level1">
 <h1>Model versioning, sharing, and deployment</h1>
-<p>We will demonstrate how to perform model versioning, sharing, and deployment using a combination of <em>pins</em>, <em>vetiver</em>, and <em>plumber</em>.</p>
-<p>In this example, we will first save our random forest model to an S3 bucket using <em>pins</em> and <em>vetiver</em>.</p>
+<p>We will demonstrate how to perform model versioning, sharing, and deployment using a combination of <em>pins</em>, <em>vetiver</em>, and <em>plumber</em>. <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html">We’ll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called “objects”, organized in “buckets”. It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.</a> In this example, we will first specify our S3 bucket.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>board <span class="ot">&lt;-</span> <span class="fu">board_s3</span>(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data"</span>, </span>
@@ -491,29 +498,101 @@ Cadillac Fleetwood 10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4</code></p
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">secret_access_key =</span> <span class="st">"password"</span>, </span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">region =</span> <span class="st">"us-east-2"</span>, </span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">endpoint =</span> <span class="fu">Sys.getenv</span>(<span class="st">"S3_ENDPOINT_URL"</span>) </span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>v_model <span class="ot">&lt;-</span> <span class="fu">vetiver_model</span>(conformalised_rf, <span class="st">"random_forest"</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">vetiver_pin_write</span>(v_model, <span class="at">board =</span> board)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will generate and save several plots for our random forest model to upload into an S3 bucket:</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Plots">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Plots
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>save_s3_plot <span class="ot">&lt;-</span> <span class="cf">function</span>(p, object_name, model, board) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  outfile <span class="ot">&lt;-</span> <span class="fu">paste0</span>(object_name, <span class="st">".html"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  p <span class="sc">|&gt;</span> </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplotly</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">saveWidget</span>(<span class="fu">file.path</span>(<span class="st">"/tmp"</span>, outfile))</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> proj_utils<span class="sc">$</span><span class="fu">model_s3_upload</span>(</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    model, board, <span class="fu">Sys.getenv</span>(<span class="st">"S3_ENDPOINT_URL"</span>), </span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"/tmp"</span>, outfile, object_name</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  model</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>conformalised_rf <span class="ot">&lt;-</span> conformalised_rf <span class="sc">|&gt;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(<span class="at">new_data =</span> data_test, <span class="at">level =</span> <span class="fl">0.95</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mpg =</span> data_test<span class="sc">$</span>mpg) <span class="sc">|&gt;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cal_plot_regression</span>(<span class="at">truth =</span> mpg, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">save_s3_plot</span>(<span class="st">"conformal_rf_calibration"</span>, conformalised_rf, board)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>conformal_explainer <span class="ot">&lt;-</span> </span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">explain_tidymodels</span>(</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> conformalised_rf,</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> data_train <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>mpg), </span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> data_train <span class="sc">|&gt;</span>  <span class="fu">pull</span>(mpg),</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">label =</span> <span class="st">"conformal"</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>conformalised_rf <span class="ot">&lt;-</span> <span class="fu">feature_importance</span>(</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  conformal_explainer,</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"variable_importance"</span>,</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_sample =</span> <span class="dv">1000</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">save_s3_plot</span>(<span class="st">"conformal_rf_variable_importance"</span>, conformalised_rf, board)</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>conformalised_rf <span class="ot">&lt;-</span> <span class="fu">model_profile</span>(</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  conformal_explainer,</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"partial"</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">save_s3_plot</span>(<span class="st">"conformal_rf_pdp"</span>, conformalised_rf, board)</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>conformalised_rf <span class="ot">&lt;-</span> <span class="fu">model_diagnostics</span>(</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  conformal_explainer</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">variable =</span> <span class="st">"y_hat"</span>, <span class="at">yvariable =</span> <span class="st">"residuals"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">save_s3_plot</span>(<span class="st">"conformal_rf_residuals"</span>, conformalised_rf, board)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
 </div>
 <p><em>vetiver</em> offers support for generating model cards from an RMD template file. We will store a rendered model card as an HTML file within an S3 bucket using <em>pins</em>:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>board <span class="sc">|&gt;</span> </span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pin_upload</span>(</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">here</span>(<span class="st">"pages"</span>, <span class="st">"tidymodels_workshop"</span>, <span class="st">"cards"</span>, <span class="st">"card.html"</span>), </span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"random_forest_card"</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>conformalised_rf <span class="ot">&lt;-</span> proj_utils<span class="sc">$</span><span class="fu">model_s3_upload</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  conformalised_rf, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  board, </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.getenv</span>(<span class="st">"S3_ENDPOINT_URL"</span>), </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">here</span>(<span class="st">"pages"</span>, <span class="st">"tidymodels_workshop"</span>, <span class="st">"cards"</span>), </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"card.html"</span>, </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"random_forest_card"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">is_card =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will save our random forest model to an S3 bucket using <em>pins</em> and <em>vetiver</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>v_model <span class="ot">&lt;-</span> <span class="fu">vetiver_model</span>(conformalised_rf, <span class="st">"random_forest"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">vetiver_pin_write</span>(v_model, <span class="at">board =</span> board)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We will next load and interact with the saved model locally using a plumber web application.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="st">"MODEL_CARD_NAME"</span> <span class="ot">=</span> <span class="st">"random_forest_card"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>loaded_v <span class="ot">&lt;-</span> board <span class="sc">|&gt;</span> </span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_pin_read</span>(<span class="st">"random_forest"</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">pr</span>(<span class="fu">here</span>(<span class="st">"app"</span>, <span class="st">"api"</span>, <span class="st">"plumber.R"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_api</span>(loaded_v) <span class="sc">|&gt;</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pr_run</span>(<span class="at">port =</span> <span class="dv">8088</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="st">"MODEL_CARD_NAME"</span> <span class="ot">=</span> <span class="st">"random_forest_card"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>loaded_v <span class="ot">&lt;-</span> board <span class="sc">|&gt;</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_pin_read</span>(<span class="st">"random_forest"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">pr</span>(<span class="fu">here</span>(<span class="st">"app"</span>, <span class="st">"api"</span>, <span class="st">"plumber.R"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vetiver_api</span>(loaded_v) <span class="sc">|&gt;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pr_run</span>(<span class="at">port =</span> <span class="dv">8088</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="docker" class="level1">

@@ -149,7 +149,7 @@ specified above and extend from it to include a principal component
 analysis (PCA) preprocessing step. [Click this link for more information
 on PCA.](https://www.nature.com/articles/s43586-022-00184-w)
 
-```{r tidymodels-pca, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-pca, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Principal Component Analysis on mtcars
 pca_prep <- training_recipe |>
   step_pca(all_numeric_predictors(), num_comp = 2) |>
@@ -175,7 +175,7 @@ This just tells us which vehicles are similar to one another by car
 make. We can view the loadings (coefficients per original variable) for
 our PCA results:
 
-```{r tidymodels-pca-loadings, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-pca-loadings, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Principal Component Analysis loadings for mtcars
 
  p <- pca_prep |>
@@ -220,7 +220,7 @@ identifies clusters of similar cars. [Click here to learn more about
 K-means
 clustering.](https://www.sciencedirect.com/science/article/abs/pii/S0020025522014633)
 
-```{r tidymodels-kmeans-clustering, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-kmeans-clustering, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Principal Component Analysis on mtcars
 set.seed(100)
 kmeans_res <- pca_results |>
@@ -440,7 +440,7 @@ best_model
 
 Let's plot the predictions of the best fitted model:
 
-```{r tidymodels-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set.
 p <- data_test |> 
   mutate(
@@ -490,7 +490,7 @@ stack_regressor
 Above, we can see the models selected by our regularised linear
 regression meta-model. Let's plot the stacking process for our ensemble:
 
-```{r tidymodels-stacking-auto-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-stacking-auto-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Ensemble stacking results.
 p <- stacks_autoplot(stack_regressor) 
 
@@ -499,7 +499,7 @@ ggplotly(p)
 
 Finally, let's take a look at the predictions of the stacking ensemble:
 
-```{r tidymodels-stacking-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-stacking-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set using stacking ensemble.
 p <- data_test |> 
   mutate(
@@ -554,7 +554,7 @@ reasonably well-calibrated prediction intervals. We can view the
 predictions produced by the conformalised model, this time with
 prediction intervals included:
 
-```{r tidymodels-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-conformalised-prediction-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised model (95% prediction intervals).
 
 p <- conformalised_regressor |> 

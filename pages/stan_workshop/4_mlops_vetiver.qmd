@@ -29,10 +29,9 @@ deployed efficiently, and monitored for performance drift over time
 
 As a reminder:
 
--   [vetiver: For model versioning, sharing, and
-    deployment](https://rstudio.github.io/vetiver-r/)
--   [plumber: For creating light-weight web applications, and deploying
-    models as microservices](https://www.rplumber.io/)
+- [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
+- [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
+- [pins: For uploading, downloading, and sharing resources.](https://pins.rstudio.com/)
 
 We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
 
@@ -40,6 +39,8 @@ We first load all required dependencies.
 
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
 Sys.setenv("S3_ENDPOINT_URL" = "http://127.0.0.1:9000")
+
+box::use(../../R/proj_utils)
 
 suppressWarnings(
   suppressPackageStartupMessages({
@@ -49,6 +50,7 @@ suppressWarnings(
     library(janitor)
     library(pins)
     library(vetiver)
+    library(bayesplot)
     library(modelr)
     library(future)
     library(paws.common)
@@ -87,46 +89,7 @@ head(df)
 
 # Model Fitting
 
-We will fit a Bayesian multi-level Gompertz curve, starting with a prior-only model.
-
-```{r stan-gompertz-priors, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
-mod_formula <- bf(Weight ~ k * exp(-exp(-(r * (
-  Length - delay
-)))), k + r + delay ~ 0 + Intercept + Treatment, nl = TRUE)
-
-priors <- c(
-  prior(nlpar = "k", lb = 0, normal(50, 20)),
-  prior(nlpar = "r", lb = 0, normal(0, 0.05)),
-  prior(nlpar = "delay", lb = 0, normal(30, 2))    # Delay across the x-axis
-)
-
-# Priors
-gompertz_priors <- brm(
-  mod_formula,
-  family = Gamma(link = "identity"),
-  prior = priors,
-  sample_prior = "only",
-  seed = 4,
-  data = df,
-  threads = threading(
-    threads = NULL,
-    grainsize = 1250,
-    static = FALSE
-  ),
-  backend = "cmdstanr",
-  file = here("pages", "stan_workshop", "model", "NL_mod_2_priors_good"),
-  silent = 1,
-  refresh = 100,
-  chains = 4,
-  cores = 4,
-  warmup = 1000,
-  iter = 2000
-)
-
-gompertz_priors
-```
-
-Next, we will fit the full Gompertz model.
+We will fit the full Gompertz model.
 
 ```{r stan-gompertz, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| label: gompertz
@@ -170,11 +133,9 @@ gompertz_model
 # Model versioning, sharing, and deployment
 
 We will demonstrate how to perform model versioning, sharing, and
-deployment using a combination of *pins*, *vetiver*, and *plumber*. 
+deployment using a combination of *pins*, *vetiver*, and *plumber*. [We'll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called "objects", organized in "buckets". It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html) In this example, we will first specify our S3 bucket.
 
-In this example, we will first save our Gompertz model to an S3 bucket using *pins* and *vetiver*.
-
-```{r stan-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+```{r stan-s3-board, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 board <- board_s3(
   "data", 
   access_key = "user", 
@@ -182,12 +143,55 @@ board <- board_s3(
   region = "us-east-2", 
   endpoint = Sys.getenv("S3_ENDPOINT_URL") 
 )
+```
 
+We will generate and save several plots for our Gompertz model to upload into an S3 bucket:
+
+::: {.callout-tip title="Plots" collapse="true"}
+```{r stan-vetiver-plots-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+save_s3_plot <- function(p, object_name, model, board) {
+  outfile <- paste0(object_name, ".html")
+
+  p |> 
+    ggplotly() |>
+    saveWidget(file.path("/tmp", outfile))
+    
+  model <- proj_utils$model_s3_upload(
+    model, board, Sys.getenv("S3_ENDPOINT_URL"), 
+    "/tmp", outfile, object_name
+  )
+  model
+}
+
+gompertz_model <- pp_check(gompertz_model) |>
+  save_s3_plot("gompertz_ppc", gompertz_model, board)
+
+gompertz_model <- as_draws_df(gompertz_model) |>
+  mcmc_dens_overlay() |>
+  save_s3_plot("gompertz_mcmc_dens", gompertz_model, board)
+
+gompertz_model <- as_draws_df(gompertz_model) |>
+  mcmc_trace() |>
+  save_s3_plot("gompertz_mcmc_trace", gompertz_model, board)
+
+p <- ppc_intervals(
+  y = df$Weight,
+  yrep = posterior_predict(gompertz_model, ndraws = 50),
+  x = df$Length
+) +
+  labs(x = "Length", y = "Weight") 
+gompertz_model <- save_s3_plot(p, "gompertz_ppc_intervals", gompertz_model, board)
+```
+:::
+
+We will next save our Gompertz model to an S3 bucket using *pins* and *vetiver*.
+
+```{r stan-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 v_model <- vetiver_model(gompertz_model, "gompertz")
 vetiver_pin_write(v_model, board = board)
 ```
 
-We will next load and interact with the saved fitted model locally using a plumber web application.
+We will next load and interact with the saved Gompertz model locally using a plumber web application.
 
 ```{r stan-vetiver-load, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 loaded_v <- board |> 

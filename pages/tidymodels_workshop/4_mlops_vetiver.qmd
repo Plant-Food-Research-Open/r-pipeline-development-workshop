@@ -23,6 +23,7 @@ As a reminder:
 
 - [vetiver: For model versioning, sharing, and deployment](https://rstudio.github.io/vetiver-r/)
 - [plumber: For creating light-weight web applications, and deploying models as microservices](https://www.rplumber.io/)
+- [pins: For uploading, downloading, and sharing resources.](https://pins.rstudio.com/)
 
 We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
 
@@ -47,10 +48,11 @@ box::use(
   parsnip[rand_forest, svm_linear, boost_tree, set_engine, set_mode, linear_reg],
   recipes[recipe, update_role, step_zv, step_nzv, step_normalize, step_impute_knn, update, all_numeric, all_outcomes],
   yardstick[rmse, mae, metric_set, metrics],
-  hardhat[tune],
+  hardhat[tune], 
+  htmlwidgets[saveWidget],
   ggplot2[ggplot, geom_point, labs, theme_minimal, aes, geom_ribbon],
   workflows[workflow, add_recipe, add_model, fit],
-  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, autoplot],
+  workflowsets[workflow_set, option_add, option_add_parameters, workflow_map, fit_best, workflow_autoplot = autoplot],
   stacks[stacks, add_candidates, blend_predictions, fit_members],
   vetiver[vetiver_model, vetiver_pin_write, vetiver_api, vetiver_pin_read],
   pins[board_temp, board_local, board_s3, pin_write, pin_read, pin_upload, pin_download],
@@ -140,7 +142,7 @@ conformalised_rf$training <- data_train
 
 We can view the predictions of the random forest model:
 
-```{r tidymodels-conformalised-rf-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
+```{r fig-tidymodels-conformalised-rf-plot, include = TRUE, echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=TRUE}
 #| fig-cap: Predicted and observed Miles per Gallon for testing set using conformalised random forest (95% prediction intervals).
 
 p <- conformalised_rf |> 
@@ -167,11 +169,9 @@ Most of the testing observations fall within the 95% prediction intervals, thoug
 # Model versioning, sharing, and deployment
 
 We will demonstrate how to perform model versioning, sharing, and
-deployment using a combination of *pins*, *vetiver*, and *plumber*. 
+deployment using a combination of *pins*, *vetiver*, and *plumber*. [We'll store everything in S3. Amazon S3 (Simple Storage Service) is cloud storage for files, called "objects", organized in "buckets". It offers scalable, secure, and flexible storage with features like versioning, encryption, and programmatic access via URLs or AWS tools.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html) In this example, we will first specify our S3 bucket.
 
-In this example, we will first save our random forest model to an S3 bucket using *pins* and *vetiver*.
-
-```{r tidymodels-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+```{r tidymodels-s3-board, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
 board <- board_s3(
   "data", 
   access_key = "user", 
@@ -179,19 +179,82 @@ board <- board_s3(
   region = "us-east-2", 
   endpoint = Sys.getenv("S3_ENDPOINT_URL") 
 )
-
-v_model <- vetiver_model(conformalised_rf, "random_forest")
-vetiver_pin_write(v_model, board = board)
 ```
+
+We will generate and save several plots for our random forest model to upload into an S3 bucket:
+
+::: {.callout-tip title="Plots" collapse="true"}
+```{r tidymodels-vetiver-plots-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+save_s3_plot <- function(p, object_name, model, board) {
+  outfile <- paste0(object_name, ".html")
+
+  p |> 
+    ggplotly() |>
+    saveWidget(file.path("/tmp", outfile))
+    
+  model <- proj_utils$model_s3_upload(
+    model, board, Sys.getenv("S3_ENDPOINT_URL"), 
+    "/tmp", outfile, object_name
+  )
+  model
+}
+
+conformalised_rf <- conformalised_rf |>
+  predict(new_data = data_test, level = 0.95) |>
+  mutate(mpg = data_test$mpg) |>
+  cal_plot_regression(truth = mpg, estimate = .pred) |>
+  save_s3_plot("conformal_rf_calibration", conformalised_rf, board)
+
+conformal_explainer <- 
+  explain_tidymodels(
+    model = conformalised_rf,
+    data = data_train |> select(-mpg), 
+    y = data_train |>  pull(mpg),
+    label = "conformal"
+  )
+
+conformalised_rf <- feature_importance(
+  conformal_explainer,
+  type = "variable_importance",
+  n_sample = 1000
+) |>
+  plot() |> 
+  save_s3_plot("conformal_rf_variable_importance", conformalised_rf, board)
+
+conformalised_rf <- model_profile(
+  conformal_explainer,
+  type = "partial"
+) |>
+  plot() |> 
+  save_s3_plot("conformal_rf_pdp", conformalised_rf, board)
+
+conformalised_rf <- model_diagnostics(
+  conformal_explainer
+) |>
+  plot(variable = "y_hat", yvariable = "residuals") |> 
+  save_s3_plot("conformal_rf_residuals", conformalised_rf, board)
+```
+:::
 
 *vetiver* offers support for generating model cards from an RMD template file. We will store a rendered model card as an HTML file within an S3 bucket using *pins*:
 
 ```{r tidymodels-card-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
-board |> 
-  pin_upload(
-    here("pages", "tidymodels_workshop", "cards", "card.html"), 
-    "random_forest_card"
-  )
+conformalised_rf <- proj_utils$model_s3_upload(
+  conformalised_rf, 
+  board, 
+  Sys.getenv("S3_ENDPOINT_URL"), 
+  here("pages", "tidymodels_workshop", "cards"), 
+  "card.html", 
+  "random_forest_card",
+  is_card = TRUE
+)
+```
+
+We will save our random forest model to an S3 bucket using *pins* and *vetiver*.
+
+```{r tidymodels-vetiver-save, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+v_model <- vetiver_model(conformalised_rf, "random_forest")
+vetiver_pin_write(v_model, board = board)
 ```
 
 We will next load and interact with the saved model locally using a plumber web application.
