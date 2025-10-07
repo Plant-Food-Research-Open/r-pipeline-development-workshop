@@ -10,3 +10,5 @@ library(tibble)
 library(xml2)
 library(tools)
 library(dplyr)
+
+httr::set_config(config(ssl_verifypeer = 0L))
