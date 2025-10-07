@@ -145,7 +145,8 @@ server <- function(input, output, session) {
         srcdoc= src,
         width = "100%",
         height = "100%",
-        frameborder = "0"
+        frameborder = "0",
+        style = "width:85vw; height:85vh; border:none;"
       ) 
     })
   })
