@@ -44,7 +44,7 @@ handler_predict.brmsfit <- function(vetiver_model, ...) {
     newdata <- req$body
     newdata <- vetiver::vetiver_type_convert(newdata, ptype)
     newdata <- hardhat::scream(newdata, ptype)
-    ret <- predict(vetiver_model$model, new_data = newdata, ndraws = 50, ...)
+    ret <- predict(vetiver_model$model, newdata = newdata, ndraws = 50, ...)
     
     list(.pred = list(
       list(
