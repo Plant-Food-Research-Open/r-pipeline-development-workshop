@@ -36,7 +36,7 @@ spec:
             - name: MODEL_CHOICES
               value: random_forest,gompertz
             - name: MODEL_ENDPOINTS
-              value: https://random-forest.model.r-pipelines.k8s.dev.pfr.co.nz,https://gompertz.model.r-pipelines.k8s.dev.pfr.co.nz
+              value: http://r-pipelines-models:8089,http://r-pipelines-models:8090
         - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
           imagePullPolicy: Always
           name: random-forest
