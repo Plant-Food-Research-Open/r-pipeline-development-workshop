@@ -17,7 +17,7 @@ spec:
         app: r-pipelines
   ingressClassName: nginx
   rules:
-    - host: shiny.r-pipelines.k8s.dev.pfr.co.nz
+    - host: shiny-random-forest.r-pipelines.k8s.dev.pfr.co.nz
       http:
         paths:
           - backend:
@@ -25,6 +25,16 @@ spec:
                 name: r-pipelines-models
                 port:
                   name: port-3838
+            path: /
+            pathType: Prefix
+    - host: shiny-gompertz.r-pipelines.k8s.dev.pfr.co.nz
+      http:
+        paths:
+          - backend:
+              service:
+                name: r-pipelines-models
+                port:
+                  name: port-3839
             path: /
             pathType: Prefix
     - host: random-forest.model.r-pipelines.k8s.dev.pfr.co.nz
@@ -49,7 +59,8 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - "shiny.r-pipelines.k8s.dev.pfr.co.nz"
+        - "shiny-random-forest.r-pipelines.k8s.dev.pfr.co.nz"
+        - "shiny-gompertz.r-pipelines.k8s.dev.pfr.co.nz"
         - "random-forest.model.r-pipelines.k8s.dev.pfr.co.nz"
         - "gompertz.model.r-pipelines.k8s.dev.pfr.co.nz"
       secretName: r-pipelines-models-tls-secret

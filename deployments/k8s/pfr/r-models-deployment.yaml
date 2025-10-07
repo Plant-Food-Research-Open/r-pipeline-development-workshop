@@ -20,7 +20,7 @@ spec:
       containers:
         - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
           imagePullPolicy: Always
-          name: shiny
+          name: shiny-random-forest
           ports:
             - containerPort: 3838
               protocol: TCP
@@ -37,6 +37,25 @@ spec:
               value: random_forest,gompertz
             - name: MODEL_ENDPOINTS
               value: http://r-pipelines-models:8089,http://r-pipelines-models:8090
+        - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
+          imagePullPolicy: Always
+          name: shiny-gompertz
+          ports:
+            - containerPort: 3839
+              protocol: TCP
+          args:
+            - R
+            - -e
+            - shiny::runApp('/app', launch.browser = FALSE, host = '0.0.0.0', port = 3839)
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: user
+            - name: AWS_SECRET_ACCESS_KEY
+              value: password
+            - name: MODEL_CHOICES
+              value: gompertz,random_forest
+            - name: MODEL_ENDPOINTS
+              value: http://r-pipelines-models:8090,http://r-pipelines-models:8089
         - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
           imagePullPolicy: Always
           name: random-forest
