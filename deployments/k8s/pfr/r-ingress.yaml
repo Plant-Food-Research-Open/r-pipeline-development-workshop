@@ -17,16 +17,6 @@ spec:
         app: r-pipelines
   ingressClassName: nginx
   rules:
-    - host: shiny.r-pipelines.k8s.dev.pfr.co.nz
-      http:
-        paths:
-          - backend:
-              service:
-                name: r-pipelines
-                port:
-                  name: port-3838
-            path: /
-            pathType: Prefix
     - host: minio.r-pipelines.k8s.dev.pfr.co.nz
       http:
         paths:
@@ -69,7 +59,6 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - "shiny.r-pipelines.k8s.dev.pfr.co.nz"
         - "minio.r-pipelines.k8s.dev.pfr.co.nz"
         - "minio-api.r-pipelines.k8s.dev.pfr.co.nz"
         - "h2o.r-pipelines.k8s.dev.pfr.co.nz"

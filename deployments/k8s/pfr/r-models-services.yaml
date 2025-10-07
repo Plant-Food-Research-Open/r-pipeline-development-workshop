@@ -14,6 +14,10 @@ spec:
     app: r-pipelines
   type: LoadBalancer
   ports:
+    - name: port-3838
+      protocol: TCP
+      port: 3838
+      targetPort: 3838
     - name: port-8089
       protocol: TCP
       port: 8089

@@ -30,10 +30,6 @@ spec:
       protocol: TCP
       port: 9001
       targetPort: 9001
-    - name: port-3838
-      protocol: TCP
-      port: 3838
-      targetPort: 3838
     - name: port-8088
       protocol: TCP
       port: 8088

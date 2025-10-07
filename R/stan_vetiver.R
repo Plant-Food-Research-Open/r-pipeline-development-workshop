@@ -44,10 +44,15 @@ handler_predict.brmsfit <- function(vetiver_model, ...) {
     newdata <- req$body
     newdata <- vetiver::vetiver_type_convert(newdata, ptype)
     newdata <- hardhat::scream(newdata, ptype)
-    ret <- predict(vetiver_model$model, new_data = newdata, ...)
-    list(.pred = ret[, "Estimate"],
-         "Q2.5" = ret[, "Q2.5"],
-         "Q97.5" = ret[, "Q97.5"])
+    ret <- predict(vetiver_model$model, new_data = newdata, ndraws = 50, ...)
+    
+    list(.pred = list(
+      list(
+        .pred = ret[, "Estimate"] |> mean(),
+        .pred_lower = ret[, "Q2.5"] |> mean(),
+        .pred_upper = ret[, "Q97.5"] |> mean()
+      )
+    ))
   }
   
 }

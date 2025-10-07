@@ -26,6 +26,14 @@ server <- function(input, output, session) {
     model_endpoints[[idx]]
   })
   
+  df_features <- reactive({
+    paste(model_endpoint(), "prototype", sep = "/") |>
+      GET() |>
+      content("text") |>
+      fromJSON()
+  }) |>
+    bindCache(input$model_choice)
+  
   df <- reactive({
     paste(model_endpoint(), "data", sep = "/") |>
       GET() |>
@@ -34,6 +42,8 @@ server <- function(input, output, session) {
       as_tibble()
   }) |>
     bindCache(input$model_choice)
+  
+  prediction_df <- reactiveVal(tibble())
   
   model_card <- reactive({
     paste(model_endpoint(), "card", sep = "/") |>
@@ -95,6 +105,18 @@ server <- function(input, output, session) {
       model_card_content()
     })
     
+    output$dynamic_features <- renderUI({
+      lapply(names(df_features()), function(feature_name) {
+        feature_type <- df_features()[[feature_name]]$type
+        switch(feature_type,
+               character = textInput(feature_name, label = feature_name, value = "None"),
+               numeric = numericInput(feature_name, label = feature_name, value = 0),
+               select = selectInput(feature_name, label = feature_name, choices = c()),
+               NULL
+        )
+      })
+    })
+
     updateSelectizeInput(
       session, "plot_choice", choices = plot_choices(), server = FALSE,
       selected = plot_choices()[1]
@@ -125,6 +147,51 @@ server <- function(input, output, session) {
         height = "100%",
         frameborder = "0"
       ) 
+    })
+  })
+  
+  observeEvent(input$clear_predict, { 
+    prediction_df(tibble())
+  })
+  
+  observeEvent(input$predict, {
+    req_body <- reactiveValuesToList(input)[names(df_features())] |>
+      as.tibble()
+
+    preds <- paste(model_endpoint(), "predict", sep = "/") |>
+      POST(
+        body = req_body,
+        encode = "json"
+      ) |>
+      content("text") |>
+      fromJSON()
+    
+    req_body$.pred <- preds$.pred$.pred
+    req_body$.pred_lower <- preds$.pred$.pred_lower
+    req_body$.pred_upper <- preds$.pred$.pred_upper
+    print(req_body)
+    prediction_df(bind_rows(prediction_df(), req_body))
+    
+    output$predictions <- renderPlotly({
+      axes_choices <- axes_choices()
+      x_ax <- x_ax()
+      
+      if((!x_ax %in% axes_choices)) {
+        return()  
+      }
+      
+      if(nrow(prediction_df()) == 0) {
+        return()
+      }
+      
+      (
+        prediction_df() |>
+          ggplot(aes(x=.data[[x_ax]], y=.data[[".pred"]])) +
+          geom_point() +
+          geom_line() +
+          geom_errorbar(aes(ymin = .data[[".pred_lower"]], ymax = .data[[".pred_upper"]]), width = 0.3)
+      ) |>
+        ggplotly()
     })
   })
   

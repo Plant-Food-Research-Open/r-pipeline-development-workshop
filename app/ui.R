@@ -43,6 +43,19 @@ ui <- page_sidebar(
         )
       ),
       accordion_panel(
+        "Predictions",
+        tags$style(HTML("
+        #predict {
+          position: sticky;
+          top: 10px;
+          z-index: 1000;
+        }
+      ")),
+        actionButton("predict", "Predict"),
+        htmlOutput("dynamic_features"),
+        actionButton("clear_predict", "Clear Predictions")
+      ),
+      accordion_panel(
         "Downloads",
         downloadButton("download_data", "Download Data"),
         downloadButton("download_card", "Download Card"),
@@ -57,6 +70,13 @@ ui <- page_sidebar(
       "Scatter", 
       card(
         plotlyOutput("scatter"),
+        full_screen = TRUE
+      )
+    ),
+    nav_panel(
+      "Predictions", 
+      card(
+        plotlyOutput("predictions"),
         full_screen = TRUE
       )
     ),

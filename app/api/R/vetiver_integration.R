@@ -21,21 +21,22 @@ predict.int_conformal_split <- function(object, new_data, level = 0.95, ...) {
 }
 
 handler_predict.int_conformal_split <- function(vetiver_model, ...) {
-    ptype <- vetiver_model$prototype
-    
-    function(req) {
-      newdata <- req$body
-      newdata <- vetiver::vetiver_type_convert(newdata, ptype)
-      newdata <- hardhat::scream(newdata, ptype)
-      ret <- predict(vetiver_model$model, new_data = newdata, ...)
-      list(.pred = ret)
-    }
-    
+  ptype <- vetiver_model$prototype
+  
+  function(req) {
+    newdata <- req$body
+    newdata <- vetiver::vetiver_type_convert(newdata, ptype)
+    newdata <- hardhat::scream(newdata, ptype)
+    ret <- predict(vetiver_model$model, new_data = newdata, ...)
+    list(.pred = ret)
+  }
+  
 }
 
 vetiver_create_meta.int_conformal_split <-
   function(model, metadata) {
-    vetiver::vetiver_meta(metadata, required_pkgs = c("probably", "workflows", "stacks", "workflowsets"))
+    vetiver::vetiver_meta(metadata,
+                          required_pkgs = c("probably", "workflows", "stacks", "workflowsets"))
   }
 
 vetiver_create_description.brmsfit <- function(model) {
@@ -57,36 +58,37 @@ handler_predict.brmsfit <- function(vetiver_model, ...) {
     newdata <- req$body
     newdata <- vetiver::vetiver_type_convert(newdata, ptype)
     newdata <- hardhat::scream(newdata, ptype)
-    ret <- predict(vetiver_model$model, new_data = newdata, ...)
-    list(
-      .pred = ret[,"Estimate"],
-      "Q2.5" = ret[, "Q2.5"],
-      "Q97.5" = ret[, "Q97.5"]
-    )
+    ret <- predict(vetiver_model$model, new_data = newdata, ndraws = 50, ...)
+    
+    list(.pred = list(
+      list(
+        .pred = ret[, "Estimate"] |> mean(),
+        .pred_lower = ret[, "Q2.5"] |> mean(),
+        .pred_upper = ret[, "Q97.5"] |> mean()
+      )
+    ))
   }
   
 }
 
 predict.cmdstanr_container <- function(model, new_data) {
   data <- list()
-  variable_names <- model$model$variables()$data |> 
+  variable_names <- model$model$variables()$data |>
     names()
   
-  for(variable_name in variable_names) {
-    if(variable_name == "N") {
+  for (variable_name in variable_names) {
+    if (variable_name == "N") {
       data["N"] <- nrow(new_data)
     } else {
       data[[variable_name]] <- new_data[[variable_name]]
       indx_var <- paste0(variable_name, "_J")
-      if(indx_var %in% variable_names) {
+      if (indx_var %in% variable_names) {
         data[[indx_var]] <- model$data[[indx_var]]
       }
     }
   }
   
-  model$model$generate_quantities(
-    model$fit, data = data
-  )$summary() |> dplyr::select(-variable)
+  model$model$generate_quantities(model$fit, data = data)$summary() |> dplyr::select(-variable)
 }
 
 vetiver_create_description.cmdstanr_container <- function(model) {
@@ -110,7 +112,7 @@ handler_predict.cmdstanr_container <- function(vetiver_model, ...) {
     newdata <- hardhat::scream(newdata, ptype)
     ret <- predict(vetiver_model$model, new_data = newdata, ...)
     list(
-      .pred = ret[,"mean"],
+      .pred = ret[, "mean"],
       "sd" = ret[, "sd"],
       "q5" = ret[, "q5"],
       "q95" = ret[, "q95"]
