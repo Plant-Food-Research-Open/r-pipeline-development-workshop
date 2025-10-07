@@ -2,7 +2,6 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
-[![Build](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/actions/workflows/build.yaml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Plant-Food-Research-Open/r-pipeline-development-workshop.git/HEAD)
 [![CodeQL Advanced](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/actions/workflows/codeql.yaml/badge.svg?branch=main)](https://github.com/Plant-Food-Research-Open/r-pipeline-development-workshop/actions/workflows/codeql.yaml)
 
