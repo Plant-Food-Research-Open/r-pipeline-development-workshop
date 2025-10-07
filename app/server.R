@@ -169,7 +169,6 @@ server <- function(input, output, session) {
     req_body$.pred <- preds$.pred$.pred
     req_body$.pred_lower <- preds$.pred$.pred_lower
     req_body$.pred_upper <- preds$.pred$.pred_upper
-    print(req_body)
     prediction_df(bind_rows(prediction_df(), req_body))
     
     output$predictions <- renderPlotly({
