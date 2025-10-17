@@ -105,6 +105,4 @@ RUN chown -R ${NB_USER}:${NB_USER} ${HOME} \
     && echo 'CXXFLAGS=-O1 -g0 -fno-inline -pipe' >> /usr/local/lib/R/etc/Makeconf \
     && echo 'MAKEFLAGS=-j1' >> /usr/local/lib/R/etc/Makeconf
 
-USER ${NB_USER}
-
 EXPOSE 8787 8787
