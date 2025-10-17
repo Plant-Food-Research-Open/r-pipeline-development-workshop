@@ -93,7 +93,7 @@ COPY --chown=${NB_USER}:${NB_USER} .here .
 
 COPY --from=r_builder --chown=${NB_USER}:${NB_USER} ${HOME} .
 
-COPY --from=python_builder --chown=${NB_USER}:${NB_USER} /opt/venv ${VIRTUAL_ENV} 
+COPY --from=python_builder --chown=${NB_USER}:${NB_USER} ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
 
 RUN chown -R ${NB_USER}:${NB_USER} ${HOME} \
     && chmod -R 755 ${HOME} \
