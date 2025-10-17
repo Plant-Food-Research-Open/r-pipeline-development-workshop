@@ -4,22 +4,32 @@ ARG BUILD_DATE
 
 ARG APP_VERSION
 
+ARG HOME=/home/rstudio
+
+ARG NB_USER=rstudio
+
 LABEL maintainer=james.bristow@plantandfood.co.nz
 
 LABEL org.label-schema.build-date=$BUILD_DATE
 
 LABEL version=$APP_VERSION
 
-WORKDIR /app
+ENV HOME=$HOME
+
+ENV NB_USER=$NB_USER
+
+WORKDIR ${HOME}
+
+USER root
 
 COPY README.md README.md
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    RENV_PATHS_ROOT=/app/renv \
-    RENV_PATHS_LIBRARY=/app/renv/library \
-    RENV_PATHS_CACHE=/app/renv/.cache \
+    RENV_PATHS_ROOT=${HOME}/renv \
+    RENV_PATHS_LIBRARY=${HOME}/renv/library \
+    RENV_PATHS_CACHE=${HOME}/renv/.cache \
     RENV_CONFIG_REPOS_OVERRIDE=https://cloud.r-project.org \
-    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/bin/java
+    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/bin/java 
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openjdk-17-jdk pandoc libsodium-dev graphviz \
@@ -38,7 +48,7 @@ FROM base AS r_builder
 
 COPY renv.lock .renvignore .Rprofile ./
 
-COPY renv /app/renv
+COPY renv ${HOME}/renv
 
 RUN mkdir -p $RENV_PATHS_LIBRARY \
     && mkdir -p $RENV_PATHS_CACHE \
@@ -51,44 +61,50 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache \
-    PATH="/root/.local/bin:$PATH"
+    PATH="${HOME}/.local/bin:/root/.local/bin:$PATH"
 
 COPY pyproject.toml poetry.lock ./
 
 RUN curl -sSL https://install.python-poetry.org | python3 -\
-    && poetry install --no-root \
+    && poetry install --no-root --with dev \
     && rm -rf $POETRY_CACHE_DIR \
     && curl -sSL https://install.python-poetry.org | python3 - --uninstall
 
 FROM base AS runtime
 
-ENV R_LIBS=/app/renv/library/R-4.4/x86_64-pc-linux-gnu \
-    R_LIBS_SITE=/app/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu \
-    VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+ENV R_LIBS=${HOME}/renv/library/R-4.4/x86_64-pc-linux-gnu \
+    R_LIBS_SITE=${HOME}/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu \
+    VIRTUAL_ENV=${HOME}/.venv \
+    PATH="${HOME}/.venv/bin:$PATH"
 
-COPY --chown=rstudio:rstudio ./app /app/app
+COPY --chown=${NB_USER}:${NB_USER} ./app ${HOME}/app
 
-COPY --chown=rstudio:rstudio ./R /app/R
+COPY --chown=${NB_USER}:${NB_USER} ./R ${HOME}/R
 
-COPY --chown=rstudio:rstudio ./pages /app/pages
+COPY --chown=${NB_USER}:${NB_USER} ./pages ${HOME}/pages
 
-COPY --chown=rstudio:rstudio ./stan /app/stan
+COPY --chown=${NB_USER}:${NB_USER} ./stan ${HOME}/stan
 
-COPY --chown=rstudio:rstudio ./pipelines /app/pipelines
+COPY --chown=${NB_USER}:${NB_USER} ./pipelines ${HOME}/pipelines
 
-COPY --chown=rstudio:rstudio r-pipeline-development.Rproj .
+COPY --chown=${NB_USER}:${NB_USER} r-pipeline-development.Rproj .
 
-COPY --chown=rstudio:rstudio .here .
+COPY --chown=${NB_USER}:${NB_USER} .here .
 
-COPY --from=r_builder --chown=rstudio:rstudio /app .
+COPY --from=r_builder --chown=${NB_USER}:${NB_USER} ${HOME} .
 
-COPY --from=python_builder --chown=rstudio:rstudio ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=python_builder --chown=${NB_USER}:${NB_USER} /opt/venv ${VIRTUAL_ENV} 
 
-RUN chown -R rstudio:rstudio /app \
-    && chmod -R 755 /app \
+RUN chown -R ${NB_USER}:${NB_USER} ${HOME} \
+    && chmod -R 755 ${HOME} \
     && R -e "cmdstanr::install_cmdstan()" \
-    && echo '.libPaths(c("/app/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu", .libPaths()))' \
-    >> /usr/local/lib/R/etc/Rprofile.site
+    && echo '.libPaths(c("/home/rstudio/renv/library/linux-ubuntu-jammy/R-4.4/x86_64-pc-linux-gnu", .libPaths()))' \
+    >> /usr/local/lib/R/etc/Rprofile.site \
+    && echo 'Sys.setenv(MAKEFLAGS = "-j1", CXXFLAGS = "-O1 -g0 -fno-inline -pipe")' \
+    >> /usr/local/lib/R/etc/Rprofile.site \
+    && echo 'CXXFLAGS=-O1 -g0 -fno-inline -pipe' >> /usr/local/lib/R/etc/Makeconf \
+    && echo 'MAKEFLAGS=-j1' >> /usr/local/lib/R/etc/Makeconf
+
+USER ${NB_USER}
 
 EXPOSE 8787 8787
