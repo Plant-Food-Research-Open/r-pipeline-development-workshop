@@ -31,6 +31,8 @@ algorithms and modern AI methods.
 We first load all required dependencies.
 
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
+Sys.setenv("JAVA_HOME" = "/usr/lib/jvm/java-17-openjdk-amd64/")
+
 box::use(../../R/proj_utils)
 box::use(../../R/tidymodels_deployment)
 
