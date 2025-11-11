@@ -41,7 +41,9 @@ We will elucidate upon *Docker* and *Kubernetes* in subsequent sections.
 We first load all required dependencies.
 
 ```{r setup, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE, output=TRUE, eval=TRUE}
-Sys.setenv("S3_ENDPOINT_URL" = "http://127.0.0.1:9000")
+if (Sys.getenv("S3_ENDPOINT_URL") == "") {
+  Sys.setenv("S3_ENDPOINT_URL" = "http://127.0.0.1:9000")
+}
 
 box::use(../../R/proj_utils)
 box::use(../../R/tidymodels_deployment)
