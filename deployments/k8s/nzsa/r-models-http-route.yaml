@@ -12,7 +12,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /NZSA-01
+            value: /NZSA-01-shiny
       backendRefs:
         - name: r-pipelines-models
           port: 3838
@@ -25,7 +25,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /NZSA-02
+            value: /NZSA-01-plumber
       backendRefs:
         - name: r-pipelines-models
           port: 8089
