@@ -355,5 +355,9 @@ The following code will apply our Kubernetes manifest files, which will
 subsequently deploy our models:
 
 ```{r tidymodels-k8s-apply, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+system("kubectl delete httproute r-pipelines-models")
+system("kubectl delete services r-pipelines-models")
+system("kubectl delete deployments r-pipelines-models")
+
 system("kubectl apply -f /home/rstudio/deployments/k8s/nzsa")
 ```
