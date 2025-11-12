@@ -83,6 +83,8 @@ COPY --chown=${NB_USER}:${NB_USER} ./R ${HOME}/R
 
 COPY --chown=${NB_USER}:${NB_USER} ./pages ${HOME}/pages
 
+COPY --chown=${NB_USER}:${NB_USER} ./deployments ${HOME}/deployments
+
 COPY --chown=${NB_USER}:${NB_USER} ./stan ${HOME}/stan
 
 COPY --chown=${NB_USER}:${NB_USER} ./pipelines ${HOME}/pipelines

@@ -3,7 +3,7 @@ ui <- page_sidebar(
   
   theme = bs_theme(
     bootswatch = "lux",
-    base_font = font_google("Inter"),
+    base_font = c("Grandstander", "sans-serif"),
     navbar_bg = "#4a8273",
     font_scale = 0.8
   ),

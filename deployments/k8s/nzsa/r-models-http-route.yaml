@@ -1,0 +1,37 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: r-pipelines-models
+spec:
+  parentRefs:
+    - name: rtis-k8s-charlie-gw
+      namespace: gateways
+  hostnames:
+    - shiny.otago.ac.nz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /NZSA-01
+      backendRefs:
+        - name: r-pipelines-models
+          port: 3838
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              replacePrefixMatch: /
+              type: ReplacePrefixMatch
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /NZSA-02
+      backendRefs:
+        - name: r-pipelines-models
+          port: 8089
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              replacePrefixMatch: /
+              type: ReplacePrefixMatch
