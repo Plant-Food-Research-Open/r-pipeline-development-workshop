@@ -39,7 +39,7 @@ spec:
             - name: MODEL_CHOICES
               value: random_forest
             - name: MODEL_ENDPOINTS
-              value: https://shiny.otago.ac.nz/NZSA-02
+              value: https://shiny.otago.ac.nz/NZSA-01-plumber
         - image: ghcr.io/plant-food-research-open/shiny-rpipelines:0.1.0
           resources:
             requests:
