@@ -350,3 +350,10 @@ In brief:
     our Kubernetes cluster.
 3.  Our S3 server is also running on Kubernetes, allowing us to load our
     model and any other artifacts of interest.
+
+The following code will apply our Kubernetes manifest files, which will
+subsequently deploy our models:
+
+```{r tidymodels-k8s-apply, include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE, output=TRUE, eval=FALSE}
+system("kubectl apply -f /home/rstudio/deployments/k8s/nzsa")
+```
