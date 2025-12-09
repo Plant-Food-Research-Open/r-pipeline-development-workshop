@@ -1,6 +1,6 @@
 # Announcements
 
-## R Pipeline Development Workshop (NZSA) \[2025/12/10\]
+## R Pipeline Development Workshop (NZSA) \[2025/12/09\]
 
 ### Information
 
