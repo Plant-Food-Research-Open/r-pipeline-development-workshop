@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  rstudio:
+    image: ghcr.io/plant-food-research-open/rstudio-rpipelines:${CALISIM_VERSION:-latest}
+    command: sleep infinity
+    volumes:
+      - .:/workspace
+    tty: true
