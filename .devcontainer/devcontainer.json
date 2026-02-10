@@ -1,0 +1,18 @@
+{
+    "dockerComposeFile": [
+        "../docker-compose.devcontainer.yaml"
+    ],
+    "service": "rstudio",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "root",
+    "privileged": true,
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "docker.docker",
+                "REditorSupport.r",
+                "REditorSupport.r-lsp"
+            ]
+        }
+    }
+}
